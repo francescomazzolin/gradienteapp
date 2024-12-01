@@ -397,7 +397,7 @@ def document_generator():
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     key = 'reddown'
                 )
-            fact_check_button = st.button('Fact Check', key = 'blue')
+            #fact_check_button = st.button('Fact Check', key = 'blue')
 
             with col2:
                 if st.button('Fact Check', key = 'blue'):
