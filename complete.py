@@ -13,6 +13,14 @@ import importlib
 import configparser
 import tiktoken
 
+
+import pathlib
+
+def load_css(file_path):
+
+    with open(file_path) as f:
+        st.html(f'<style> {f.read()} </style>')
+
 # Custom Functions Module
 import to_pager_functions_2 as tp
 importlib.reload(tp)
@@ -60,6 +68,12 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
+css_path = pathlib.Path("style.css")
+
+load_css(css_path)
+
+st.button("Hello", key = 'green')
 
 # Display Banner Image
 banner_path = "AI GRADIENTE VETTORIALE_page-0001.jpg"  # Update with the correct path
@@ -127,16 +141,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
                         st.success('Processing complete! You can now ask questions.')
             else:
                 st.error('No documents to process. Please provide PDFs.')
-    st.markdown(
-    """
-    <style>
-    div[data-testid="stChatInput"] {
-        margin-top: -200px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+
     # Input for questions
     user_question = st.chat_input('Ask a question about your documents:')
 
