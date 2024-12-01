@@ -386,7 +386,7 @@ def document_generator():
 
     if st.session_state.get('fact_check', False):
         
-        chatbot_with_pdfs(default=False, pdf_docs=st.sessione_state.all_files)
+        chatbot_with_pdfs(default=False, pdf_docs=st.session_state.all_files)
 
 # Main Function
 def main():
