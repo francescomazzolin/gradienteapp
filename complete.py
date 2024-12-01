@@ -386,7 +386,7 @@ def document_generator():
 
         st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
         # Create buttons inside the container
-        col1, spacer, col2 = st.columns([2, 4.5, 1.5])
+        col1, spacer, col2 = st.columns([2, 4.7, 1.5])
         
         with col1:
             with open(output_path, "rb") as doc_file:
