@@ -31,7 +31,7 @@ def get_html_text(html_docs):
             soup = BeautifulSoup(html_content, 'html.parser')
             text += soup.get_text(separator="\n")
         except Exception as e:
-            st.error(f"Error processing {html_file.name}: {e}")
+            st.error(f"Error processing {html_file}: {e}")
     return text
 
 def get_text_from_files(files):
