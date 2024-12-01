@@ -397,7 +397,7 @@ App design functions
 """
 
 def update_progressbar(progress_bar, message_placeholder,
-                       milestone, step,
+                       milestone, steps,
                        message):
     progress_bar.progress(milestone / steps)
     message_placeholder.markdown(message)
