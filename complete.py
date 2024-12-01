@@ -386,7 +386,7 @@ def document_generator():
 
         st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
         # Create buttons inside the container
-        col1, col2 = st.columns(2)
+        col1, spacer, col2 = st.columns([2, 1, 2])
         
         with col1:
             with open(output_path, "rb") as doc_file:
@@ -398,7 +398,7 @@ def document_generator():
                     key = 'reddown'
                 )
             #fact_check_button = st.button('Fact Check', key = 'blue')
-            st.markdown("<div style='height: 500px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             with col2:
                 if st.button('Fact Check', key ='blue'):
                     st.session_state.fact_check = True
