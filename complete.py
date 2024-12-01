@@ -14,7 +14,7 @@ import configparser
 import tiktoken
 
 # Custom Functions Module
-import to_pager_functions_2 as fc
+import to_pager_functions_2 as tp
 importlib.reload(fc)
 
 import pdf_chat_functions as pc
@@ -247,16 +247,8 @@ def document_generator():
     # Start the generation process
     if gen_button:
     
-        
-        #if pdf_docs:
-            #st.write('Files correctly uploaded')
-            
-        #else:
-            #st.write("No files uploaded.")
-
-        
-
-        progress_bar = st.progress(0)  # Initialize progress bar
+        #Initialize progress bar and creating a placeholder for dynamic text
+        progress_bar = st.progress(0)  
         message_placeholder = st.empty()  # Placeholder for dynamic text
 
         progress_bar.progress(milestone / steps)
@@ -268,22 +260,22 @@ def document_generator():
         temp_responses = []
         answers_dict = {}
 
-        configuration = fc.assistant_config(config, 'BO')
+        configuration = tp.assistant_config(config, 'BO')
 
-        assistant_identifier = fc.create_assistant(client, 'final_test', configuration)
+        assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
 
         file_streams = pdf_docs
 
         vector_store = client.beta.vector_stores.create(name="Business Overview")
         vector_store_id = vector_store.id
         
-        fc.load_file_to_assistant(client, vector_store_id,
+        tp.load_file_to_assistant(client, vector_store_id,
                                     assistant_identifier, file_streams)
 
         
         # Retrieve prompts and formatting requirements
         try:
-            prompt_list, additional_formatting_requirements, prompt_df = fc.prompts_retriever(
+            prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(
                 'prompt_db.xlsx', ['BO_Prompts', 'BO_Format_add'])
         except Exception as e:
             st.error(f"Error retrieving prompts: {e}")
@@ -296,22 +288,22 @@ def document_generator():
         
         #print(f'{prompt_list}')
         for prompt_name, prompt_message in prompt_list:
-            prompt_message_f = fc.prompt_creator(prompt_df, prompt_name, 
+            prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
                                                 answers_dict)
             
-            assistant_response, thread_id = fc.separate_thread_answers(openai, prompt_message_f, 
+            assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier)
             
-            assistant_response = fc.warning_check(assistant_response, client,
+            assistant_response = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 
                                                   assistant_identifier)
             
             if assistant_response:
                 temp_responses.append(assistant_response)
-                assistant_response = fc.remove_source_patterns(assistant_response)
+                assistant_response = tp.remove_source_patterns(assistant_response)
                 answers_dict[prompt_name] = assistant_response
-                fc.document_filler(doc_copy, prompt_name, assistant_response)
+                tp.document_filler(doc_copy, prompt_name, assistant_response)
             else:
                 st.warning(f"No response for prompt '{prompt_name}'.")
         
@@ -320,13 +312,13 @@ def document_generator():
         
         
         #assistant_identifier = 'asst_vy2MqKVgrmjCecSTRgg0y6oO'
-        configuration = fc.assistant_config(config, 'RM')
-        assistant_identifier = fc.create_assistant(client, 'final_test', configuration)
+        configuration = tp.assistant_config(config, 'RM')
+        assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
 
         vector_store = client.beta.vector_stores.create(name="Reference Market")
         vector_store_id = vector_store.id
         
-        fc.load_file_to_assistant(client, vector_store_id,
+        tp.load_file_to_assistant(client, vector_store_id,
                                     assistant_identifier, file_streams)
         
         progress_bar.progress(milestone / steps)
@@ -334,31 +326,31 @@ def document_generator():
         time.sleep(1)  # Simulate delay for demonstration
         milestone += 1
         
-        retrieved_files = fc.html_retriever(file_streams)
+        retrieved_files = tp.html_retriever(file_streams)
 
         if retrieved_files:
 
-            fc.load_file_to_assistant(client, vector_store_id,
+            tp.load_file_to_assistant(client, vector_store_id,
                                         assistant_identifier, retrieved_files,
                                         uploaded = False)
 
 
         progress_bar.progress(milestone / steps)
-        message_placeholder.markdown("Preparing market analysis...")
+        message_placeholder.markdown("Preparing Market Analysis...")
         time.sleep(1)  # Simulate delay for demonstration
         milestone += 1
-        prompt_list, additional_formatting_requirements, prompt_df = fc.prompts_retriever('prompt_db.xlsx', 
+        prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever('prompt_db.xlsx', 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         for prompt_name, prompt_message in prompt_list:
 
-            prompt_message_f = fc.prompt_creator(prompt_df, prompt_name, 
+            prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                             prompt_message, additional_formatting_requirements,
                                             answers_dict)
 
-            assistant_response, thread_id = fc.separate_thread_answers(openai, prompt_message_f, 
+            assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier)
             
-            assistant_response = fc.warning_check(assistant_response, client,
+            assistant_response = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 
                                                   assistant_identifier)
             
@@ -368,18 +360,18 @@ def document_generator():
 
             temp_responses.append(assistant_response)
 
-            assistant_response = fc.remove_source_patterns(assistant_response)
+            assistant_response = tp.remove_source_patterns(assistant_response)
 
             answers_dict[prompt_name] = assistant_response
 
-            fc.document_filler(doc_copy, prompt_name, assistant_response)
+            tp.document_filler(doc_copy, prompt_name, assistant_response)
     
         progress_bar.progress(milestone / steps)
         message_placeholder.markdown("Formatting the document...")
         time.sleep(1)  # Simulate delay for demonstration
         milestone += 1
 
-        fc.adding_headers(doc_copy, project_title)
+        tp.adding_headers(doc_copy, project_title)
 
         # Save the modified document
         output_path = 'generated_document.docx'
