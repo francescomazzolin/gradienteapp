@@ -62,12 +62,12 @@ def get_text_from_files(files):
             if file.endswith('.pdf'):
 
                 pdf_files.append(file)
-                st.write(f'Found file {file.name} is .pdf')
+                st.write(f'Found file {file} is .pdf')
 
             elif file.endswith('.html'):
 
                 html_files.append(file)
-                st.write(f'Found file {file.name} is .html')
+                st.write(f'Found file {file} is .html')
 
     #pdf_files = [file for file in files if file.endswith('.pdf')]
     #html_files = [file for file in files if file.endswith('.html')]
