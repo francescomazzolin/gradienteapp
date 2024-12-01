@@ -30,6 +30,13 @@ from datetime import datetime
 import streamlit as st
 
 
+def load_css(file_path):
+
+    with open(file_path) as f:
+        st.html(f'<style> {f.read()} </style>')
+
+
+
 def get_pdf_files_in_directory(directory):
     """Returns a list of PDF files in the given directory."""
     return [file for file in os.listdir(directory) if file.endswith('.pdf')]

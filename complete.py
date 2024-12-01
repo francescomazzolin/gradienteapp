@@ -16,11 +16,6 @@ import tiktoken
 
 import pathlib
 
-def load_css(file_path):
-
-    with open(file_path) as f:
-        st.html(f'<style> {f.read()} </style>')
-
 # Custom Functions Module
 import to_pager_functions_2 as tp
 importlib.reload(tp)
@@ -69,11 +64,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+"""
+Loading the file with other stylings
+"""
+
 css_path = pathlib.Path("style.css")
 
-load_css(css_path)
+tp.load_css(css_path)
 
-st.button("Hello", key = 'green')
 
 # Display Banner Image
 banner_path = "AI GRADIENTE VETTORIALE_page-0001.jpg"  # Update with the correct path
@@ -244,8 +242,8 @@ def document_generator():
     """   )
     st.markdown(hide_enter_message, unsafe_allow_html=True)
     project_title = st.text_input("")
-
-    gen_button = st.button('Generate Document')
+    
+    gen_button = st.button('Generate Document', key = 'red')
 
     # Start the generation process
     if gen_button:
@@ -395,7 +393,8 @@ def document_generator():
                 label="Download Document",
                 data=doc_file,
                 file_name=output_path,
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key = 'red'
             )
         fact_check_button = st.button('Fact Check')
         if fact_check_button:

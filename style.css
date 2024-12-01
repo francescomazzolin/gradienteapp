@@ -1,5 +1,19 @@
-.st-key-green
-button{
-  background-color
-  : green;
+.st-key-red button {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  color: white;
+  background-color: #E41A13;
+  /* Button background color */
+  border-radius: 5px;
+  border: none;
+}
+
+.st-key-red download_button {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  color: white;
+  background-color: #E41A13;
+  /* Button background color */
+  border-radius: 5px;
+  border: none;
 }
