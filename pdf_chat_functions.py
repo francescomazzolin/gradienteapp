@@ -41,7 +41,7 @@ def get_text_from_files(files):
         st.write(f'{file}')
         st.write(f'{type(file)}')
     
-    uploaded_file = 'streamlit.runtime.uploaded_file_manager.UploadedFile'
+    from streamlit.runtime.uploaded_file_manager import UploadedFile
 
     text = ""
 
@@ -50,7 +50,7 @@ def get_text_from_files(files):
 
     for file in files:
 
-        if isinstance(file, uploaded_file):
+        if isinstance(file, UploadedFile):
 
             if file.name.endswith('.pdf'):
 
