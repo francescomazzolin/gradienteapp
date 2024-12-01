@@ -144,7 +144,8 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
     
     # Process the question
     if user_question and st.session_state.conversation:
-        with st.spinner("Fetching response...", key = 'bluespin'):
+        spinner = st.spinner("Fetching response...", key = 'bluespin')
+        with spinner:
             time.sleep(40)
 
             try:
