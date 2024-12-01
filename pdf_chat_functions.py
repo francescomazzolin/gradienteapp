@@ -35,9 +35,15 @@ def get_html_text(html_docs):
     return text
 
 def get_text_from_files(files):
+
+    for file in files:
+
+        st.write(f'{file}')
+        st.write(f'{type(file)}')
+
     text = ""
-    pdf_files = [file for file in files if file.name.endswith('.pdf')]
-    html_files = [file for file in files if file.name.endswith('.html')]
+    pdf_files = [file for file in files if file.endswith('.pdf')]
+    html_files = [file for file in files if file.endswith('.html')]
 
     if pdf_files:
         text += get_pdf_text(pdf_files)
