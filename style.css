@@ -23,6 +23,11 @@
   border: none;
 }
 
+.st-key-reddown button:hover {
+  background-color: #00509E;
+  /* Darker red on hover */
+}
+
 .st-key-blue button {
   font-family: Arial, sans-serif;
   font-weight: 700;
@@ -31,4 +36,9 @@
   /* Button background color */
   border-radius: 5px;
   border: none;
+}
+
+.st-key-blue button:hover {
+  background-color: #C41711;
+  /* Darker red on hover */
 }
