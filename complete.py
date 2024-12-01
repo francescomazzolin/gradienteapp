@@ -238,12 +238,9 @@ def document_generator():
         progress_bar = st.progress(0)  
         message_placeholder = st.empty() 
 
-        #progress_bar.progress(milestone / steps)
-        #message_placeholder.markdown("Learning from the presentation...")
-        #time.sleep(1) 
-        #milestone += 1
         tp.update_progressbar(progress_bar, message_placeholder,
-                              milestone, steps)
+                              milestone, steps,
+                              message="Learning from the presentation...")
                 
         # Initialize variables
         temp_responses = []
@@ -269,11 +266,10 @@ def document_generator():
         except Exception as e:
             st.error(f"Error retrieving prompts: {e}")
             return
-        
-        progress_bar.progress(milestone / steps)
-        message_placeholder.markdown("Preparing Business Overview...")
-        time.sleep(1)  
-        milestone += 1
+
+        tp.update_progressbar(progress_bar, message_placeholder,
+                              milestone, steps,
+                              message="Preparing Business Overview...")
         
         for prompt_name, prompt_message in prompt_list:
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
@@ -307,10 +303,10 @@ def document_generator():
         tp.load_file_to_assistant(client, vector_store_id,
                                     assistant_identifier, file_streams)
         
-        progress_bar.progress(milestone / steps)
-        message_placeholder.markdown("Searching online...")
-        time.sleep(1)  
-        milestone += 1
+
+        tp.update_progressbar(progress_bar, message_placeholder,
+                              milestone, steps,
+                              message="Searching online...")
         
         retrieved_files = tp.html_retriever(file_streams)
 
@@ -321,10 +317,11 @@ def document_generator():
                                         uploaded = False)
 
 
-        progress_bar.progress(milestone / steps)
-        message_placeholder.markdown("Preparing Market Analysis...")
-        time.sleep(1)  
-        milestone += 1
+
+        tp.update_progressbar(progress_bar, message_placeholder,
+                              milestone, steps,
+                              message="Preparing Market Analysis...")
+        
         prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever('prompt_db.xlsx', 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         for prompt_name, prompt_message in prompt_list:
@@ -352,10 +349,10 @@ def document_generator():
 
             tp.document_filler(doc_copy, prompt_name, assistant_response)
     
-        progress_bar.progress(milestone / steps)
-        message_placeholder.markdown("Formatting the document...")
-        time.sleep(1)  
-        milestone += 1
+
+        tp.update_progressbar(progress_bar, message_placeholder,
+                              milestone, steps,
+                              message = "Formatting the document...")
 
         tp.adding_headers(doc_copy, project_title)
 

@@ -397,9 +397,10 @@ App design functions
 """
 
 def update_progressbar(progress_bar, message_placeholder,
-                       milestone, steps):
+                       milestone, step,
+                       message):
     progress_bar.progress(milestone / steps)
-    message_placeholder.markdown("Formatting the document...")
+    message_placeholder.markdown(message)
     time.sleep(1)  
     milestone += 1
 
