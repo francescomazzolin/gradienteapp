@@ -29,10 +29,6 @@ if openai.api_key is None:
     st.error("Error: OpenAI API key not found. Make sure it is set in environment variables or Streamlit secrets.")
     st.stop()
 
-#This makes sure that none of the warnings will be printed on screen
-#st.set_option('deprecation.showwarning', False)
-#st.set_option('global.showWarningOnDirectExecution', False)
-
 # Set Page Configuration
 st.set_page_config(page_title='AI Gradiente', page_icon=':robot:')
 #st.subheader('SUCCESS COMES WHEN PREPARATION MEETS OPPORTUNITY')
@@ -69,9 +65,6 @@ st.markdown("""
 banner_path = "AI GRADIENTE VETTORIALE_page-0001.jpg"  # Update with the correct path
 st.image(banner_path, use_container_width=True)
 
-# Main Title
-#st.title("AI Assistant Application")
-
 st.markdown("<h3 style='font-size:25px;'>Select your application:</h3>", unsafe_allow_html=True)
 
 # Inject custom CSS to reduce the margin above the select box
@@ -90,8 +83,6 @@ option = st.selectbox(
     '',  # Leave label empty because it's already displayed above
     ('Select an application', 'Chatbot with PDFs', 'Document Generator')
 )
-
-# Chatbot Functionality
 
 # Chatbot Functionality
 def chatbot_with_pdfs(default=True, pdf_docs=None):
@@ -135,10 +126,6 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
         else:
             st.error('No documents to process. Please provide PDFs.')
 
-    # The rest of your chatbot code remains the same
-    # ...
-
-
     # Input for questions
     user_question = st.chat_input('Ask a question about your documents:')
 
@@ -150,9 +137,9 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
                 response = st.session_state.conversation({'question': user_question})
                 answer = response['answer']  # Assuming response contains an 'answer' key
 
-                # Update chat history in session state
+                #Update chat history in session state
                 st.session_state.chat_history.append({'question': user_question, 'answer': answer})
-              # Refresh UI to display the updated chat history
+                #Refresh UI to display the updated chat history
 
             except Exception as e:
                 st.error(f"Error: {e}")
@@ -249,12 +236,14 @@ def document_generator():
     
         #Initialize progress bar and creating a placeholder for dynamic text
         progress_bar = st.progress(0)  
-        message_placeholder = st.empty()  # Placeholder for dynamic text
+        message_placeholder = st.empty() 
 
-        progress_bar.progress(milestone / steps)
-        message_placeholder.markdown("Learning from the presentation...")
-        time.sleep(1)  # Simulate delay for demonstration
-        milestone += 1
+        #progress_bar.progress(milestone / steps)
+        #message_placeholder.markdown("Learning from the presentation...")
+        #time.sleep(1) 
+        #milestone += 1
+        tp.update_progressbar(progress_bar, message_placeholder,
+                              milestone, steps)
                 
         # Initialize variables
         temp_responses = []
@@ -283,10 +272,9 @@ def document_generator():
         
         progress_bar.progress(milestone / steps)
         message_placeholder.markdown("Preparing Business Overview...")
-        time.sleep(1)  # Simulate delay for demonstration
+        time.sleep(1)  
         milestone += 1
         
-        #print(f'{prompt_list}')
         for prompt_name, prompt_message in prompt_list:
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
@@ -310,8 +298,6 @@ def document_generator():
         
         #REFERENCE MARKET CREATION
         
-        
-        #assistant_identifier = 'asst_vy2MqKVgrmjCecSTRgg0y6oO'
         configuration = tp.assistant_config(config, 'RM')
         assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
 
@@ -323,7 +309,7 @@ def document_generator():
         
         progress_bar.progress(milestone / steps)
         message_placeholder.markdown("Searching online...")
-        time.sleep(1)  # Simulate delay for demonstration
+        time.sleep(1)  
         milestone += 1
         
         retrieved_files = tp.html_retriever(file_streams)
@@ -337,7 +323,7 @@ def document_generator():
 
         progress_bar.progress(milestone / steps)
         message_placeholder.markdown("Preparing Market Analysis...")
-        time.sleep(1)  # Simulate delay for demonstration
+        time.sleep(1)  
         milestone += 1
         prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever('prompt_db.xlsx', 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
@@ -368,7 +354,7 @@ def document_generator():
     
         progress_bar.progress(milestone / steps)
         message_placeholder.markdown("Formatting the document...")
-        time.sleep(1)  # Simulate delay for demonstration
+        time.sleep(1)  
         milestone += 1
 
         tp.adding_headers(doc_copy, project_title)
