@@ -112,7 +112,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
             st.subheader('Your documents')
             pdf_docs = st.file_uploader('Upload your PDFs here and click on Process', 
                                         accept_multiple_files=True)
-            if st.button('Process'):
+            if st.button('Process', key = 'red'):
                 if pdf_docs:
                     with st.spinner('Processing'):
                         # Process PDFs
