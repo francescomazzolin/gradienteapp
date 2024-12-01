@@ -131,7 +131,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
     """
     <style>
     div[data-testid="stChatInput"] {
-        margin-top: -100px;
+        margin-top: -200px;
     }
     </style>
     """,
