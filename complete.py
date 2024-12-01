@@ -96,6 +96,14 @@ option = st.selectbox(
     ('Select an application', 'Chatbot with PDFs', '2Pager Generator')
 )
 
+
+btn = st.download_button(
+    label="Download Document",
+    data=doc_file,
+    file_name=output_path,
+    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    key = 'reddown'
+)
 # Chatbot Functionality
 def chatbot_with_pdfs(default=True, pdf_docs=None):
 
