@@ -114,6 +114,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
                                         accept_multiple_files=True)
             if st.button('Process', key = 'red'):
                 if pdf_docs:
+                    st.markdown('<div class="st-key-bluespin">', unsafe_allow_html=True)
                     with st.spinner('Processing'):
                         # Process PDFs
                         raw_text = pc.get_pdf_text(pdf_docs)
@@ -127,6 +128,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
     else:
             if pdf_docs:
                 if st.session_state.conversation is None:
+                    st.markdown('<div class="st-key-bluespin">', unsafe_allow_html=True)
                     with st.spinner('Processing'):
                         
                         raw_text = pc.get_text_from_files(pdf_docs)
@@ -143,7 +145,8 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
 
     # Process the question
     if user_question and st.session_state.conversation:
-        with st.spinner("Fetching response...", key = 'bluespin'):
+        st.markdown('<div class="st-key-bluespin">', unsafe_allow_html=True)
+        with st.spinner("Fetching response..."):
             try:
                 # Get the response from the conversation chain
                 response = st.session_state.conversation({'question': user_question})

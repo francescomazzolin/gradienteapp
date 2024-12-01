@@ -45,7 +45,7 @@
 
 
 /* Spinner styling for .st-key-bluespin */
-.st-key-bluespin .stSpinner {
+.st-key-bluespin .stSpinner>div {
   border-top-color: #003966 !important;
   /* Custom spinner color */
   border-left-color: #003966 !important;
