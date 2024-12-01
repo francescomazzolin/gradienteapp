@@ -322,7 +322,7 @@ def document_generator():
         st.session_state.retrieved_files = retrieved_files
 
         all_files = file_streams + retrieved_files
-        st.sessione_state.all_files = all_files
+        st.session_state.all_files = all_files
 
         if retrieved_files:
 
