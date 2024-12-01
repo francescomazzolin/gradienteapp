@@ -127,7 +127,16 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
                         st.success('Processing complete! You can now ask questions.')
             else:
                 st.error('No documents to process. Please provide PDFs.')
-
+    st.markdown(
+    """
+    <style>
+    div[data-testid="stChatInput"] {
+        margin-top: -50px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
     # Input for questions
     user_question = st.chat_input('Ask a question about your documents:')
 
@@ -373,6 +382,9 @@ def document_generator():
     if st.session_state.get('document_generated', False):
         output_path = st.session_state.generated_doc_path
         doc_copy.save(output_path)
+
+        st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+
         with open(output_path, "rb") as doc_file:
             btn = st.download_button(
                 label="Download Document",
