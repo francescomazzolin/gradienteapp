@@ -146,8 +146,8 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
     if user_question and st.session_state.conversation:
         st.markdown("""
             <style>.stSpinner > div > div {
-                border-top-color: #003966;
-                border-left-color: #003966
+                border-top-color: #003366;
+                border-left-color: #003366;
             }</style>
             """, unsafe_allow_html=True)
 
