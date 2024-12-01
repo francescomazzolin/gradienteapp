@@ -118,7 +118,8 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
             if pdf_docs:
                 if st.session_state.conversation is None:
                     with st.spinner('Processing'):
-                        raw_text = pc.get_pdf_text(pdf_docs)
+                        
+                        raw_text = pc.get_text_from_files(pdf_docs)
                         text_chunks = pc.get_text_chunks(raw_text)
                         vectorstore = pc.get_vectorstore(text_chunks)
                         st.session_state.conversation = pc.get_conversation_chain(vectorstore)
@@ -320,6 +321,9 @@ def document_generator():
         retrieved_files = tp.html_retriever(file_streams)
         st.session_state.retrieved_files = retrieved_files
 
+        all_files = file_streams + retrieved_files
+        st.sessione_state.all_files = all_files
+
         if retrieved_files:
 
             tp.load_file_to_assistant(client, vector_store_id,
@@ -381,7 +385,8 @@ def document_generator():
             st.session_state.fact_check = True
 
     if st.session_state.get('fact_check', False):
-        chatbot_with_pdfs(default=False, pdf_docs=st.session_state.file_streams)
+        
+        chatbot_with_pdfs(default=False, pdf_docs=st.sessione_state.all_files)
 
 # Main Function
 def main():

@@ -8,6 +8,8 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 import openai
+from bs4 import BeautifulSoup
+
 
 # Supporting Functions for Chatbot
 def get_pdf_text(pdf_docs):
@@ -20,6 +22,30 @@ def get_pdf_text(pdf_docs):
         except Exception as e:
             st.error(f"Error processing {pdf.name}: {e}")
     return text
+
+def get_html_text(html_docs):
+    text = ""
+    for html_file in html_docs:
+        try:
+            html_content = html_file.read()
+            soup = BeautifulSoup(html_content, 'html.parser')
+            text += soup.get_text(separator="\n")
+        except Exception as e:
+            st.error(f"Error processing {html_file.name}: {e}")
+    return text
+
+def get_text_from_files(files):
+    text = ""
+    pdf_files = [file for file in files if file.name.endswith('.pdf')]
+    html_files = [file for file in files if file.name.endswith('.html')]
+
+    if pdf_files:
+        text += get_pdf_text(pdf_files)
+    if html_files:
+        text += get_html_text(html_files)
+
+    return text
+
 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
