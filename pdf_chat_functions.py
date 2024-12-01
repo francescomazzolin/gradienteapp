@@ -27,9 +27,10 @@ def get_html_text(html_docs):
     text = ""
     for html_file in html_docs:
         try:
-            html_content = html_file.read()
-            soup = BeautifulSoup(html_content, 'html.parser')
-            text += soup.get_text(separator="\n")
+            with open(html_file, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                        soup = BeautifulSoup(html_content, 'html.parser')
+                        text += soup.get_text(separator="\n")
         except Exception as e:
             st.error(f"Error processing {html_file}: {e}")
     return text
