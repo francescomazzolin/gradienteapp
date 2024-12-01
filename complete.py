@@ -86,6 +86,7 @@ option = st.selectbox(
 
 # Chatbot Functionality
 def chatbot_with_pdfs(default=True, pdf_docs=None):
+
     if default:
         st.header('Chat with multiple PDFs :books:')
 
@@ -114,17 +115,17 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
                 else:
                     st.warning('Please upload at least one PDF file before processing.')
     else:
-        # Process PDFs when default is False
-        if pdf_docs:
-            with st.spinner('Processing'):
-                raw_text = pc.get_pdf_text(pdf_docs)
-                text_chunks = pc.get_text_chunks(raw_text)
-                vectorstore = pc.get_vectorstore(text_chunks)
-                st.session_state.conversation = pc.get_conversation_chain(vectorstore)
-                st.session_state.chat_history = []
-                st.success('Processing complete! You can now ask questions.')
-        else:
-            st.error('No documents to process. Please provide PDFs.')
+            if pdf_docs:
+                if st.session_state.conversation is None:
+                    with st.spinner('Processing'):
+                        raw_text = pc.get_pdf_text(pdf_docs)
+                        text_chunks = pc.get_text_chunks(raw_text)
+                        vectorstore = pc.get_vectorstore(text_chunks)
+                        st.session_state.conversation = pc.get_conversation_chain(vectorstore)
+                        st.session_state.chat_history = []
+                        st.success('Processing complete! You can now ask questions.')
+            else:
+                st.error('No documents to process. Please provide PDFs.')
 
     # Input for questions
     user_question = st.chat_input('Ask a question about your documents:')
@@ -173,7 +174,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
 # Document Generator Functionality
 def document_generator():
     
-    milestone = 1
+    milestone = [1]
     steps = 5
 
     # Preloaded Files
@@ -233,6 +234,16 @@ def document_generator():
 
     # Start the generation process
     if gen_button:
+        
+        #Persistent variables that we need across sessions
+        file_streams = pdf_docs
+        output_path = f'{project_title}.docx'
+
+        #This willl update the session_state so that 
+        st.session_state.document_generated = True
+        st.session_state.generated_doc_path = output_path
+        st.session_state.file_streams = file_streams
+        st.session_state.project_title = project_title
     
         #Initialize progress bar and creating a placeholder for dynamic text
         progress_bar = st.progress(0)  
@@ -249,8 +260,6 @@ def document_generator():
         configuration = tp.assistant_config(config, 'BO')
 
         assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
-
-        file_streams = pdf_docs
 
         vector_store = client.beta.vector_stores.create(name="Business Overview")
         vector_store_id = vector_store.id
@@ -309,6 +318,7 @@ def document_generator():
                               message="Searching online...")
         
         retrieved_files = tp.html_retriever(file_streams)
+        st.session_state.retrieved_files = retrieved_files
 
         if retrieved_files:
 
@@ -356,12 +366,9 @@ def document_generator():
 
         tp.adding_headers(doc_copy, project_title)
 
-        # Save the modified document
-        output_path = f'{project_title}.docx'
+    if st.session_state.get('document_generated', False):
+        output_path = st.session_state.generated_doc_path
         doc_copy.save(output_path)
-        message_placeholder.empty()
-        st.success(f'The 2Pager has been generated and is ready to be donwloaded')
-        # Provide a download link
         with open(output_path, "rb") as doc_file:
             btn = st.download_button(
                 label="Download Document",
@@ -370,10 +377,11 @@ def document_generator():
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         fact_check_button = st.button('Fact Check')
-
         if fact_check_button:
+            st.session_state.fact_check = True
 
-            chatbot_with_pdfs(default=False, pdf_docs=file_streams)
+    if st.session_state.get('fact_check', False):
+        chatbot_with_pdfs(default=False, pdf_docs=st.session_state.file_streams)
 
 # Main Function
 def main():
