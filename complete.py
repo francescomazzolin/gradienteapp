@@ -81,7 +81,7 @@ st.markdown(
 
 option = st.selectbox(
     '',  # Leave label empty because it's already displayed above
-    ('Select an application', 'Chatbot with PDFs', 'Document Generator')
+    ('Select an application', 'Chatbot with PDFs', '2Pager Generator')
 )
 
 # Chatbot Functionality
@@ -192,7 +192,7 @@ def document_generator():
     # Read the .cfg file
     config.read('assistant_config.cfg')  # Replace with your file path
 
-    st.header('Document Generator :page_facing_up:')
+    st.header('2Pager Generator :page_facing_up:')
     
     # Inputs or configurations for the document generator
     st.markdown('Upload your files here:')
@@ -269,7 +269,7 @@ def document_generator():
 
         tp.update_progressbar(progress_bar, message_placeholder,
                               milestone, steps,
-                              message="Preparing Business Overview...")
+                              message="Generating Business Overview...")
         
         for prompt_name, prompt_message in prompt_list:
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
@@ -320,7 +320,7 @@ def document_generator():
 
         tp.update_progressbar(progress_bar, message_placeholder,
                               milestone, steps,
-                              message="Preparing Market Analysis...")
+                              message="Generating Market Analysis...")
         
         prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever('prompt_db.xlsx', 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
@@ -357,7 +357,7 @@ def document_generator():
         tp.adding_headers(doc_copy, project_title)
 
         # Save the modified document
-        output_path = 'generated_document.docx'
+        output_path = f'{project_title}.docx'
         doc_copy.save(output_path)
         message_placeholder.empty()
         st.success(f'The 2Pager has been generated and is ready to be donwloaded')
@@ -379,7 +379,7 @@ def document_generator():
 def main():
     if option == 'Chatbot with PDFs':
         chatbot_with_pdfs()
-    elif option == 'Document Generator':
+    elif option == '2Pager Generator':
         document_generator()
     else:
         pass

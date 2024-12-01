@@ -303,8 +303,8 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
     else:
 
         warning = missing_warning(client, thread_id, prompt, assistant_identifier)
-        st.write(f'To the prompt: {prompt}')
-        st.write(f'Gives waring: {warning}')
+        #st.write(f'To the prompt: {prompt}')
+        #st.write(f'Gives waring: {warning}')
 
         return warning
 
