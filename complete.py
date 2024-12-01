@@ -398,7 +398,7 @@ def document_generator():
                     key = 'reddown'
                 )
             #fact_check_button = st.button('Fact Check', key = 'blue')
-            st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
             with col2:
                 if st.button('Fact Check', key ='blue'):
                     st.session_state.fact_check = True
