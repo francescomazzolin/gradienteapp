@@ -140,7 +140,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
 
     # Input for questions
     user_question = st.chat_input('Ask a question about your documents:')
-
+    h = st.spinner()
     # Process the question
     if user_question and st.session_state.conversation:
         with st.spinner("Fetching response...", key = 'bluespin'):
