@@ -394,7 +394,7 @@ def document_generator():
                 data=doc_file,
                 file_name=output_path,
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key = 'red'
+                key = 'reddown'
             )
         fact_check_button = st.button('Fact Check')
         if fact_check_button:
