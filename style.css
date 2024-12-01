@@ -1,29 +1,50 @@
+/* Keyframes for the draw-border animation */
+@keyframes draw-border {
+  0% {
+    border: 2px solid transparent;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+
+  50% {
+    border: 2px solid white;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  }
+
+  100% {
+    border: 2px solid transparent;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Red button with draw-border animation */
 .st-key-red button {
   font-family: Arial, sans-serif;
   font-weight: 700;
   color: white;
   background-color: #E41B13;
-  /* Button background color */
   border-radius: 5px;
-  border: none;
+  border: 2px solid transparent;
+  animation: draw-border 2s infinite;
+  /* Apply animation */
+  cursor: pointer;
 }
 
+/* Blue button with draw-border animation */
 .st-key-reddown .stDownloadButton button {
   font-family: Arial, sans-serif;
   font-weight: 700;
   color: white;
   background-color: #003966;
-  /* Button background color */
   border-radius: 5px;
-  border: none;
+  border: 2px solid transparent;
+  animation: draw-border 2s infinite;
+  /* Apply animation */
+  cursor: pointer;
 }
 
-.st-key-blue button {
-  font-family: Arial, sans-serif;
-  font-weight: 700;
-  color: white;
-  background-color: #E41B13;
-  /* Button background color */
-  border-radius: 5px;
-  border: none;
+/* Optional: Hover effects for buttons */
+.st-key-red button:hover,
+.st-key-reddown .stDownloadButton button:hover {
+  background-color: #c11b10;
+  /* Slightly darker shade */
 }
