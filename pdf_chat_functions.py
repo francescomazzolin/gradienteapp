@@ -40,10 +40,37 @@ def get_text_from_files(files):
 
         st.write(f'{file}')
         st.write(f'{type(file)}')
+    
+    uploaded_file = 'streamlit.runtime.uploaded_file_manager.UploadedFile'
 
     text = ""
-    pdf_files = [file for file in files if file.endswith('.pdf')]
-    html_files = [file for file in files if file.endswith('.html')]
+
+    pdf_files = []
+    html_files = []
+
+    for file in files:
+
+        if isinstance(file, uploaded_file):
+
+            if file.name.endswith('.pdf'):
+
+                pdf_files.append(file)
+                st.write(f'Uploaded file {file.name} is .pdf')
+
+        else:
+
+            if file.endswith('.pdf'):
+
+                pdf_files.append(file)
+                st.write(f'Found file {file.name} is .pdf')
+
+            elif file.endswith('.html'):
+
+                html_files.append(file)
+                st.write(f'Found file {file.name} is .html')
+
+    #pdf_files = [file for file in files if file.endswith('.pdf')]
+    #html_files = [file for file in files if file.endswith('.html')]
 
     if pdf_files:
         text += get_pdf_text(pdf_files)
