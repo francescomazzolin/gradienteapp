@@ -1,104 +1,34 @@
-/* Base button styles */
-.st-key-red button,
-.st-key-reddown .stDownloadButton button,
+.st-key-red button {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  color: white;
+  background-color: #E41B13;
+  /* Button background color */
+  border-radius: 5px;
+  border: none;
+}
+
+.st-key-reddown .stDownloadButton button {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  color: white;
+  background-color: #003966;
+  /* Button background color */
+  border-radius: 5px;
+  border: none;
+}
+
 .st-key-blue button {
   font-family: Arial, sans-serif;
   font-weight: 700;
-  color: #58afd1;
-  /* Initial text color */
-  border: none;
-  background: none;
+  color: white;
   background-color: #E41B13;
-  /* Default background color for red buttons */
+  /* Button background color */
   border-radius: 5px;
-  padding: 1em 2em;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  transition: color 0.25s 0.083s;
+  border: none;
 }
 
-/* Specific background colors */
-.st-key-reddown .stDownloadButton button {
+
+.st-key-prog .stProgress {
   background-color: #003966;
-  /* Background color for blue button */
-}
-
-.st-key-blue button {
-  background-color: #E41B13;
-  /* Adjust if needed */
-}
-
-/* Draw-border effect using pseudo-elements */
-.st-key-red button::before,
-.st-key-red button::after,
-.st-key-reddown .stDownloadButton button::before,
-.st-key-reddown .stDownloadButton button::after,
-.st-key-blue button::before,
-.st-key-blue button::after {
-  content: '';
-  position: absolute;
-  box-sizing: border-box;
-  width: 0;
-  height: 0;
-  border: 4px solid transparent;
-  /* Border width and initial color */
-  pointer-events: none;
-}
-
-.st-key-red button::before,
-.st-key-reddown .stDownloadButton button::before,
-.st-key-blue button::before {
-  bottom: 0;
-  right: 0;
-  border-bottom-width: 4px;
-  border-right-width: 4px;
-}
-
-.st-key-red button::after,
-.st-key-reddown .stDownloadButton button::after,
-.st-key-blue button::after {
-  top: 0;
-  left: 0;
-  border-top-width: 4px;
-  border-left-width: 4px;
-}
-
-/* Hover effect */
-.st-key-red button:hover,
-.st-key-reddown .stDownloadButton button:hover,
-.st-key-blue button:hover {
-  color: #ffe593;
-  /* Text color on hover */
-}
-
-.st-key-red button:hover::before,
-.st-key-red button:hover::after,
-.st-key-reddown .stDownloadButton button:hover::before,
-.st-key-reddown .stDownloadButton button:hover::after,
-.st-key-blue button:hover::before,
-.st-key-blue button:hover::after {
-  border-color: #ffe593;
-  /* Border color on hover */
-  transition: border-color 0s, width 0.25s, height 0.25s;
-  width: 100%;
-  height: 100%;
-}
-
-.st-key-red button:hover::before {
-  transition-delay: 0s, 0s, 0.25s;
-}
-
-.st-key-red button:hover::after {
-  transition-delay: 0s, 0.25s, 0s;
-}
-
-.st-key-reddown .stDownloadButton button:hover::before,
-.st-key-blue button:hover::before {
-  transition-delay: 0s, 0s, 0.25s;
-}
-
-.st-key-reddown .stDownloadButton button:hover::after,
-.st-key-blue button:hover::after {
-  transition-delay: 0s, 0.25s, 0s;
 }
