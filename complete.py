@@ -64,10 +64,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-"""
-Loading the file with other stylings
-"""
-
 css_path = pathlib.Path("style.css")
 
 tp.load_css(css_path)
@@ -97,13 +93,7 @@ option = st.selectbox(
 )
 
 
-btn = st.download_button(
-    label="Download Document",
-    #data=doc_file,
-    #file_name=output_path,
-    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    key = 'reddown'
-)
+
 # Chatbot Functionality
 def chatbot_with_pdfs(default=True, pdf_docs=None):
 
@@ -201,6 +191,14 @@ def document_generator():
     # Preloaded Files
     xlsx_file = "prompt_db.xlsx"
     docx_file = "to_pager_template.docx"
+
+    btn = st.download_button(
+        label="Download Document",
+        data=docx_file,
+        file_name='test',
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        key = 'reddown'
+    )
 
     doc_copy = Document(docx_file)
     
