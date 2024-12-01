@@ -174,7 +174,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
 # Document Generator Functionality
 def document_generator():
     
-    milestone = 1
+    milestone = [1]
     steps = 5
 
     # Preloaded Files
@@ -368,6 +368,7 @@ def document_generator():
 
     if st.session_state.get('document_generated', False):
         output_path = st.session_state.generated_doc_path
+        doc_copy.save(output_path)
         with open(output_path, "rb") as doc_file:
             btn = st.download_button(
                 label="Download Document",
