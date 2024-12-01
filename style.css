@@ -8,6 +8,11 @@
   border: none;
 }
 
+.st-key-red button:hover {
+  background-color: #C41711;
+  /* Darker red on hover */
+}
+
 .st-key-reddown .stDownloadButton button {
   font-family: Arial, sans-serif;
   font-weight: 700;
