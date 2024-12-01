@@ -11,6 +11,9 @@ import openai
 from bs4 import BeautifulSoup
 import streamlit as st
 
+from streamlit.runtime.uploaded_file_manager import UploadedFile
+
+
 # Supporting Functions for Chatbot
 def get_pdf_text(pdf_docs):
     text = ""
@@ -37,13 +40,6 @@ def get_html_text(html_docs):
 
 def get_text_from_files(files):
 
-    for file in files:
-
-        st.write(f'{file}')
-        st.write(f'{type(file)}')
-    
-    from streamlit.runtime.uploaded_file_manager import UploadedFile
-
     text = ""
 
     pdf_files = []
@@ -56,19 +52,19 @@ def get_text_from_files(files):
             if file.name.endswith('.pdf'):
 
                 pdf_files.append(file)
-                st.write(f'Uploaded file {file.name} is .pdf')
+                #st.write(f'Uploaded file {file.name} is .pdf')
 
         else:
 
             if file.endswith('.pdf'):
 
                 pdf_files.append(file)
-                st.write(f'Found file {file} is .pdf')
+                #st.write(f'Found file {file} is .pdf')
 
             elif file.endswith('.html'):
 
                 html_files.append(file)
-                st.write(f'Found file {file} is .html')
+                #st.write(f'Found file {file} is .html')
 
     #pdf_files = [file for file in files if file.endswith('.pdf')]
     #html_files = [file for file in files if file.endswith('.html')]

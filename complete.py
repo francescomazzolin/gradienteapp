@@ -385,23 +385,6 @@ def document_generator():
             st.session_state.fact_check = True
 
     if st.session_state.get('fact_check', False):
-        st.write(f'\nLoaded files\n')
-        for file in st.session_state.file_streams:
-
-            st.write(f'{file}')
-            st.write(f'{type(file)}')
-        
-        st.write(f'\nHtml files\n')
-        for file in st.session_state.retrieved_files:
-
-            st.write(f'{file}')
-            st.write(f'{type(file)}')
-
-        st.write(f'\Combined files\n')
-        for file in st.session_state.all_files:
-
-            st.write(f'{file}')
-            st.write(f'{type(file)}')
 
         chatbot_with_pdfs(default=False, pdf_docs=st.session_state.all_files)
 
