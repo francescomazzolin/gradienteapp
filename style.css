@@ -49,10 +49,5 @@
   border-top-color: #003966 !important;
   /* Custom spinner color */
   border-left-color: #003966 !important;
-  font-family: Arial, sans-serif;
-  font-weight: 700;
-  color: white;
-  background-color: transparent;
-  /* Ensure the spinner has no background */
   border-radius: 5px;
 }
