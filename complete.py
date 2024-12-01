@@ -400,7 +400,7 @@ def document_generator():
             #fact_check_button = st.button('Fact Check', key = 'blue')
             st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             with col2:
-                if st.button('Fact Check', key = 'blue'):
+                if st.button('Fact Check', key ='red'):
                     st.session_state.fact_check = True
 
     if st.session_state.get('fact_check', False):
