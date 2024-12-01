@@ -393,7 +393,7 @@ def document_generator():
         output_path = st.session_state.generated_doc_path
         doc_copy.save(output_path)
 
-        st.markdown("<hr style='border:1px solid #003966; margin:20px 0;'>", unsafe_allow_html=True)
+        st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
         # Create buttons inside the container
         col1, spacer, col2 = st.columns([2, 4.5, 1.3])
         
