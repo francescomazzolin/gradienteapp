@@ -139,8 +139,9 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
                 st.error('No documents to process. Please provide PDFs.')
 
     # Input for questions
-    user_question = st.chat_input('Ask a question about your documents:')
-    h = st.spinner()
+    with st.spinner():
+        user_question = st.chat_input('Ask a question about your documents:')
+    
     # Process the question
     if user_question and st.session_state.conversation:
         with st.spinner("Fetching response...", key = 'bluespin'):
