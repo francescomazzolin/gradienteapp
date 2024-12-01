@@ -8,6 +8,11 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chat_models import ChatOpenAI
 import openai
+from bs4 import BeautifulSoup
+import streamlit as st
+
+from streamlit.runtime.uploaded_file_manager import UploadedFile
+
 
 # Supporting Functions for Chatbot
 def get_pdf_text(pdf_docs):
@@ -20,6 +25,57 @@ def get_pdf_text(pdf_docs):
         except Exception as e:
             st.error(f"Error processing {pdf.name}: {e}")
     return text
+
+def get_html_text(html_docs):
+    text = ""
+    for html_file in html_docs:
+        try:
+            with open(html_file, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                        soup = BeautifulSoup(html_content, 'html.parser')
+                        text += soup.get_text(separator="\n")
+        except Exception as e:
+            st.error(f"Error processing {html_file}: {e}")
+    return text
+
+def get_text_from_files(files):
+
+    text = ""
+
+    pdf_files = []
+    html_files = []
+
+    for file in files:
+
+        if isinstance(file, UploadedFile):
+
+            if file.name.endswith('.pdf'):
+
+                pdf_files.append(file)
+                #st.write(f'Uploaded file {file.name} is .pdf')
+
+        else:
+
+            if file.endswith('.pdf'):
+
+                pdf_files.append(file)
+                #st.write(f'Found file {file} is .pdf')
+
+            elif file.endswith('.html'):
+
+                html_files.append(file)
+                #st.write(f'Found file {file} is .html')
+
+    #pdf_files = [file for file in files if file.endswith('.pdf')]
+    #html_files = [file for file in files if file.endswith('.html')]
+
+    if pdf_files:
+        text += get_pdf_text(pdf_files)
+    if html_files:
+        text += get_html_text(html_files)
+
+    return text
+
 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
