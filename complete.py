@@ -47,13 +47,37 @@ st.markdown("""
         font-weight: 500;
         color: #003866;  /* Adjust header color if needed */
     }
-    .stButton>button {
+    /* Original Generate Document Button Styling */
+            
+    .stButton.generate-button > button {
         font-family: Arial, sans-serif;
         font-weight: 700;
         color: white;
-        background-color: #E41A13;  /* Button background color */
+        background-color: #E41A13; /* Original red color */
         border-radius: 5px;
         border: none;
+        padding: 10px 20px;
+    }
+
+    /* Custom styles for other buttons */
+    .custom-download-button {
+        background-color: #4CAF50 !important; /* Green */
+        color: white !important;
+        font-weight: bold;
+        border-radius: 5px;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+    }
+
+    .custom-factcheck-button {
+        background-color: #2196F3 !important; /* Blue */
+        color: white !important;
+        font-weight: bold;
+        border-radius: 5px;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
     }
     .stMarkdown {
         color: #003866;  /* Paragraph text color */
@@ -231,7 +255,8 @@ def document_generator():
     st.markdown(hide_enter_message, unsafe_allow_html=True)
     project_title = st.text_input("")
 
-    gen_button = st.button('Generate Document')
+    gen_button = st.button('Generate Document', key="generate_document", type="primary", help="Generate your document")
+    st.markdown('<div class="stButton generate-button"></div>', unsafe_allow_html=True)
 
     # Start the generation process
     if gen_button:
@@ -374,33 +399,6 @@ def document_generator():
         output_path = st.session_state.generated_doc_path
         doc_copy.save(output_path)
         st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
-        # Define custom button layout with colors
-        st.markdown(
-            """
-            <style>
-            .button-container {
-                display: flex;
-                justify-content: space-between;
-            }
-            .button-container button:first-child {
-                background-color: #4CAF50; /* Green */
-                color: white;
-                font-weight: bold;
-            }
-            .button-container button:last-child {
-                background-color: #2196F3; /* Blue */
-                color: white;
-                font-weight: bold;
-            }
-            .button-container button {
-                padding: 10px 20px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-            }
-            </style>
-            """, unsafe_allow_html=True
-        )
         
         # Create buttons inside the container
         col1, col2 = st.columns(2)
@@ -408,12 +406,16 @@ def document_generator():
         with col1:
 
             with open(output_path, "rb") as doc_file:
-                st.download_button(
-                    label="Download Document",
-                    data=doc_file,
-                    file_name=output_path,
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
+                st.markdown(
+                            f"""
+                            <a href="data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,{st.session_state.get('document_base64', '')}" 
+                            download="{st.session_state.generated_doc_path}" 
+                            style="text-decoration: none;">
+                                <button class="custom-download-button">Download Document</button>
+                            </a>
+                            """,
+                            unsafe_allow_html=True
+                        )
         with col2:
             if st.button('Fact Check'):
                 st.session_state.fact_check = True
