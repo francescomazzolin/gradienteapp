@@ -146,8 +146,6 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
     if user_question and st.session_state.conversation:
         spinner = st.spinner("Fetching response...")
         with spinner:
-            time.sleep(40)
-
             try:
                 # Get the response from the conversation chain
                 response = st.session_state.conversation({'question': user_question})
