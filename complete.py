@@ -385,18 +385,23 @@ def document_generator():
         doc_copy.save(output_path)
 
         st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+        # Create buttons inside the container
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            with open(output_path, "rb") as doc_file:
+                btn = st.download_button(
+                    label="Download Document",
+                    data=doc_file,
+                    file_name=output_path,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key = 'reddown'
+                )
+            fact_check_button = st.button('Fact Check', key = 'blue')
 
-        with open(output_path, "rb") as doc_file:
-            btn = st.download_button(
-                label="Download Document",
-                data=doc_file,
-                file_name=output_path,
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key = 'reddown'
-            )
-        fact_check_button = st.button('Fact Check', key = 'blue')
-        if fact_check_button:
-            st.session_state.fact_check = True
+            with col2:
+                if st.button('Fact Check', key = 'blue'):
+                    st.session_state.fact_check = True
 
     if st.session_state.get('fact_check', False):
 
