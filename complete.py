@@ -163,7 +163,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
             # User's question
             st.markdown(
                 f"""
-                <div style="background-color: #010609; border: 1px solid #d6d6d6; border-radius: 25px; padding: 10px; margin-bottom: 10px;">
+                <div style="background-color: #f0f2f6; border: 1px solid #d6d6d6; border-radius: 25px; padding: 10px; margin-bottom: 10px;">
                     <img src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png" alt="user" width="30" style="vertical-align: middle; margin-right: 10px;">
                     <b>You:</b> {chat['question']}
                 </div>
