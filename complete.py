@@ -99,8 +99,8 @@ option = st.selectbox(
 
 btn = st.download_button(
     label="Download Document",
-    data=doc_file,
-    file_name=output_path,
+    #data=doc_file,
+    #file_name=output_path,
     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     key = 'reddown'
 )
