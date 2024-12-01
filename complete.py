@@ -173,7 +173,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
             # Chatbot's response
             st.markdown(
                 f"""
-                    <b>AI Assistant:</b> {chat['answer']}
+                    <b>AI Gradiente:</b> {chat['answer']}
                 </div>
                 """,
                 unsafe_allow_html=True
