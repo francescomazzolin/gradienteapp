@@ -257,7 +257,16 @@ def document_generator():
         st.session_state.project_title = project_title
     
         #Initialize progress bar and creating a placeholder for dynamic text
-        progress_bar = st.progress(0, key = 'prog')  
+
+        st.markdown("""
+            <style>
+            .stProgress .st-bo {
+                background-color: #003966;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+        
+        progress_bar = st.progress(0)  
         message_placeholder = st.empty() 
 
         tp.update_progressbar(progress_bar, message_placeholder,
