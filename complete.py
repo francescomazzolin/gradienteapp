@@ -192,14 +192,6 @@ def document_generator():
     xlsx_file = "prompt_db.xlsx"
     docx_file = "to_pager_template.docx"
 
-    btn = st.download_button(
-        label="Download Document",
-        data=docx_file,
-        file_name='test',
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        key = 'reddown'
-    )
-
     doc_copy = Document(docx_file)
     
     # Initialize the OpenAI client
@@ -402,7 +394,7 @@ def document_generator():
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 key = 'reddown'
             )
-        fact_check_button = st.button('Fact Check')
+        fact_check_button = st.button('Fact Check', key = 'blue')
         if fact_check_button:
             st.session_state.fact_check = True
 
