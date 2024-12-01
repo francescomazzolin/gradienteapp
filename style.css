@@ -1,50 +1,49 @@
-/* Keyframes for the draw-border animation */
-@keyframes draw-border {
-  0% {
-    border: 2px solid transparent;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-  }
-
-  50% {
-    border: 2px solid white;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-  }
-
-  100% {
-    border: 2px solid transparent;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-  }
+/* Original button styles */
+.st-key-red button,
+.st-key-reddown .stDownloadButton button,
+.st-key-blue button {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  color: white;
+  border-radius: 5px;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  /* Needed for the border animation */
 }
 
-/* Red button with draw-border animation */
+/* Specific background colors */
 .st-key-red button {
-  font-family: Arial, sans-serif;
-  font-weight: 700;
-  color: white;
   background-color: #E41B13;
-  border-radius: 5px;
-  border: 2px solid transparent;
-  animation: draw-border 2s infinite;
-  /* Apply animation */
-  cursor: pointer;
 }
 
-/* Blue button with draw-border animation */
 .st-key-reddown .stDownloadButton button {
-  font-family: Arial, sans-serif;
-  font-weight: 700;
-  color: white;
   background-color: #003966;
-  border-radius: 5px;
-  border: 2px solid transparent;
-  animation: draw-border 2s infinite;
-  /* Apply animation */
-  cursor: pointer;
 }
 
-/* Optional: Hover effects for buttons */
-.st-key-red button:hover,
-.st-key-reddown .stDownloadButton button:hover {
-  background-color: #c11b10;
-  /* Slightly darker shade */
+.st-key-blue button {
+  background-color: #E41B13;
+}
+
+/* Draw-border effect */
+.st-key-red button:after,
+.st-key-reddown .stDownloadButton button:after,
+.st-key-blue button:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border: 2px solid white;
+  border-radius: 5px;
+  box-sizing: border-box;
+  transition: width 0.3s ease-out, height 0.3s ease-out;
+}
+
+.st-key-red button:hover:after,
+.st-key-reddown .stDownloadButton button:hover:after,
+.st-key-blue button:hover:after {
+  width: 100%;
+  height: 100%;
 }
