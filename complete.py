@@ -15,7 +15,7 @@ import tiktoken
 
 # Custom Functions Module
 import to_pager_functions_2 as tp
-importlib.reload(fc)
+importlib.reload(tp)
 
 import pdf_chat_functions as pc
 importlib.reload(pc)
