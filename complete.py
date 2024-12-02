@@ -93,16 +93,8 @@ option = st.selectbox(
 )
 
 
-
 # Chatbot Functionality
-def chatbot_with_pdfs(default=True, pdf_docs=None, reset=False):
-
-    if reset:
-        pc.initialize_chatbot_state()
-        st.session_state.chatbot_initialized = True
-    elif not st.session_state.get('chatbot_initialized', False):
-        st.session_state.chatbot_initialized = True
-    
+def chatbot_with_pdfs(default=True, pdf_docs=None):
 
     if default:
         st.header('Chat with multiple PDFs :books:')
@@ -189,6 +181,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None, reset=False):
 
     # Spacer to push the input box to the bottom
     st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
+
 
 
 # Document Generator Functionality
