@@ -502,6 +502,9 @@ from docx.oxml.ns import nsdecls
 #def highlight_paragraphs_with_keyword(doc_path, keyword):
 
 def highlight_paragraphs_with_keyword(doc, keyword, font_name, font_size):
+
+    print(f'The font name is: {font_name}')
+    print(f'The font size is: {font_size}')
     # Iterate through each paragraph
     for paragraph in doc.paragraphs:
         if keyword in paragraph.text:

@@ -213,6 +213,8 @@ def document_generator():
     #Getting the fonts
 
     font_size = config.get('document_format', 'font_size', fallback=None)
+    font_size = int(font_size)
+    print(f'The font_size is:{font_size}')
     font_type = config.get('document_format', 'font_type', fallback=None)
 
 
@@ -409,7 +411,7 @@ def document_generator():
         before_highlight = doc_copy
 
         tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
-                                             font_size=font_size, font_type = font_type)
+                                             font_name=font_type, font_size = font_size)
 
         tp.boldify_text_between_asterisks(doc_copy)
 
