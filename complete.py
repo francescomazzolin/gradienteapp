@@ -194,12 +194,6 @@ def document_generator():
     milestone = [1]
     steps = 5
 
-    # Preloaded Files
-    xlsx_file = "prompt_db.xlsx"
-    docx_file = "to_pager_template.docx"
-
-    doc_copy = Document(docx_file)
-    
     # Initialize the OpenAI client
     client = openai.OpenAI()
 
@@ -210,6 +204,14 @@ def document_generator():
     # Read the .cfg file
     config.read('assistant_config.cfg')  # Replace with your file path
 
+    # Preloaded Files
+    #xlsx_file = "prompt_db.xlsx"
+    xlsx_file = config.get('template', 'prompt', fallback = None)
+    #docx_file = "to_pager_template.docx"
+    docx_file = config.get('template', 'word_template', fallback = None)
+
+    doc_copy = Document(docx_file)
+    
     #Getting the fonts
 
     font_size = config.get('document_format', 'font_size', fallback=None)
@@ -305,7 +307,7 @@ def document_generator():
         # Retrieve prompts and formatting requirements
         try:
             prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(
-                'prompt_db.xlsx', ['BO_Prompts', 'BO_Format_add'])
+                xlsx_file, ['BO_Prompts', 'BO_Format_add'])
         except Exception as e:
             st.error(f"Error retrieving prompts: {e}")
             return
@@ -374,7 +376,7 @@ def document_generator():
                               milestone, steps,
                               message="Generating Market Analysis...")
         
-        prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever('prompt_db.xlsx', 
+        prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(xlsx_file, 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         for prompt_name, prompt_message in prompt_list:
 
