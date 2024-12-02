@@ -498,7 +498,7 @@ def highlight_paragraphs_with_keyword(doc_path, keyword):
 
     
     # Iterate through each paragraph
-    for paragraph in doc.paragraphs:
+    for paragraph in doc_path.paragraphs:
         if keyword in paragraph.text:
             # Highlight the paragraph
             shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00"/>'.format(nsdecls('w')))
