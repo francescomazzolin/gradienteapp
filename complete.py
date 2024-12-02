@@ -205,8 +205,12 @@ def document_generator():
     config.read('assistant_config.cfg')  # Replace with your file path
 
     # Preloaded Files
-    #xlsx_file = "prompt_db.xlsx"
+    xlsx_file = "prompt_db.xlsx"
+    print(xlsx_file)
+    print(f'{type(xlsx_file)}')
     xlsx_file = config.get('template', 'prompt', fallback = None)
+    print(xlsx_file)
+    print(f'{type(xlsx_file)}')
     #docx_file = "to_pager_template.docx"
     docx_file = config.get('template', 'word_template', fallback = None)
 
