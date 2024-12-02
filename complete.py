@@ -320,6 +320,7 @@ def document_generator():
         thread_identifier = thread.id
         #st.write(f'{prompt_list}')
         for prompt_name, prompt_message in prompt_list:
+            st.write(f'{prompt_name}')
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
                                                 answers_dict)
