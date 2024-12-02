@@ -306,13 +306,17 @@ def document_generator():
                               milestone, steps,
                               message="Generating Business Overview...")
         
+        thread = client.beta.threads.create()
+        thread_identifier = thread.id
+
         for prompt_name, prompt_message in prompt_list:
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
                                                 answers_dict)
             
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
-                                                            assistant_identifier)
+                                                            assistant_identifier, same_chat = True,
+                                                            thread_id = thread_identifier)
             
             assistant_response = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 
