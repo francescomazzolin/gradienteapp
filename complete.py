@@ -98,7 +98,7 @@ option = st.selectbox(
 def chatbot_with_pdfs(default=True, pdf_docs=None, reset=False):
 
     if reset or not st.session_state.get('chatbot_initialized', False):
-            tp.initialize_chatbot_state()
+            pc.initialize_chatbot_state()
     
 
     if default:
