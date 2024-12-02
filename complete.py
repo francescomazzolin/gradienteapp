@@ -210,6 +210,12 @@ def document_generator():
     # Read the .cfg file
     config.read('assistant_config.cfg')  # Replace with your file path
 
+    #Getting the fonts
+
+    font_size = config.get('document_format', 'font_size', fallback=None)
+    font_type = config.get('document_format', 'font_type', fallback=None)
+
+
     st.header('2Pager Generator :page_facing_up:')
     
     # Inputs or configurations for the document generator
@@ -306,13 +312,18 @@ def document_generator():
                               milestone, steps,
                               message="Generating Business Overview...")
         
+        thread = client.beta.threads.create()
+        thread_identifier = thread.id
+        
         for prompt_name, prompt_message in prompt_list:
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
                                                 answers_dict)
             
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
-                                                            assistant_identifier)
+                                                            assistant_identifier,
+                                                            same_chat = True,
+                                                            thread_id=thread_identifier)
             
             assistant_response = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 
@@ -395,7 +406,12 @@ def document_generator():
 
         tp.adding_headers(doc_copy, project_title)
 
-        tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%")
+        before_highlight = doc_copy
+
+        tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
+                                             font_size=font_size, font_type = font_type)
+
+        tp.boldify_text_between_asterisks(doc_copy)
 
     if st.session_state.get('document_generated', False):
         output_path = st.session_state.generated_doc_path
