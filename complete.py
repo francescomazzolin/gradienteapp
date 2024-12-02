@@ -95,7 +95,11 @@ option = st.selectbox(
 
 
 # Chatbot Functionality
-def chatbot_with_pdfs(default=True, pdf_docs=None):
+def chatbot_with_pdfs(default=True, pdf_docs=None, reset=False):
+
+    if reset:
+        pc.reset_chatbot_state()
+    
 
     if default:
         st.header('Chat with multiple PDFs :books:')

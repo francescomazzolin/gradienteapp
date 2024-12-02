@@ -117,3 +117,7 @@ def handle_userinput(user_question):
 
     # Display the response in Streamlit
     st.write(answer)
+
+def reset_chatbot_state():
+    st.session_state.conversation = None
+    st.session_state.chat_history = []      
