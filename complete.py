@@ -414,7 +414,7 @@ def document_generator():
 
         tp.adding_headers(doc_copy, project_title)
 
-        before_highlight = doc_copy
+         #before_highlight = doc_copy
 
         tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
                                              font_name=font_type, font_size = font_size)
