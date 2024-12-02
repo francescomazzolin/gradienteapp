@@ -495,7 +495,7 @@ from docx.oxml.ns import nsdecls
 
 def highlight_paragraphs_with_keyword(doc_path, keyword):
     # Open the document
-    doc = Document(doc_path)
+
     
     # Iterate through each paragraph
     for paragraph in doc.paragraphs:
