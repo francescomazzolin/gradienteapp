@@ -395,6 +395,8 @@ def document_generator():
 
         tp.adding_headers(doc_copy, project_title)
 
+        tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%")
+
     if st.session_state.get('document_generated', False):
         output_path = st.session_state.generated_doc_path
         doc_copy.save(output_path)

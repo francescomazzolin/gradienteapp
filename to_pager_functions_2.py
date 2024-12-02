@@ -489,4 +489,21 @@ def adding_headers(document, title):
                         run.text = run.text.replace(sub, new)
 
 
+from docx.shared import RGBColor
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls
+
+def highlight_paragraphs_with_keyword(doc_path, keyword):
+    # Open the document
+    doc = Document(doc_path)
+    
+    # Iterate through each paragraph
+    for paragraph in doc.paragraphs:
+        if keyword in paragraph.text:
+            # Highlight the paragraph
+            shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00"/>'.format(nsdecls('w')))
+            paragraph._p.get_or_add_pPr().append(shading_elm)
+            paragraph.text = paragraph.text.replace(keyword, '').strip()
+    
+    
 
