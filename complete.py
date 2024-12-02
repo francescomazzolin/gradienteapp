@@ -97,8 +97,11 @@ option = st.selectbox(
 # Chatbot Functionality
 def chatbot_with_pdfs(default=True, pdf_docs=None, reset=False):
 
-    if reset or not st.session_state.get('chatbot_initialized', False):
-            pc.initialize_chatbot_state()
+    if reset:
+        pc.initialize_chatbot_state()
+        st.session_state.chatbot_initialized = True
+    elif not st.session_state.get('chatbot_initialized', False):
+        st.session_state.chatbot_initialized = True
     
 
     if default:
@@ -451,7 +454,7 @@ def document_generator():
     if st.session_state.get('fact_check', False):
 
         st.session_state.chatbot_initialized = False
-        chatbot_with_pdfs(default=False, pdf_docs=st.session_state.all_files)
+        chatbot_with_pdfs(default=False, pdf_docs=st.session_state.all_files, reset = True)
         st.session_state.fact_check = False
 
 # Main Function

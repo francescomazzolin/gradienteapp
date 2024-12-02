@@ -124,7 +124,5 @@ def reset_chatbot_state():
 
 
 def initialize_chatbot_state():
-    if not st.session_state.get('chatbot_initialized', False):
-        st.session_state.conversation = None
-        st.session_state.chat_history = []
-        st.session_state.chatbot_initialized = True
+    st.session_state.conversation = None
+    st.session_state.chat_history = []
