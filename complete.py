@@ -379,7 +379,7 @@ def document_generator():
         prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(xlsx_file, 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         
-        st.write(f'{prompt_list}')
+        #st.write(f'{prompt_list}')
 
         for prompt_name, prompt_message in prompt_list:
 
