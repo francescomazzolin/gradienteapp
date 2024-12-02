@@ -322,12 +322,12 @@ def document_generator():
         
         thread = client.beta.threads.create()
         thread_identifier = thread.id
-        
+        #st.write(f'{prompt_list}')
         for prompt_name, prompt_message in prompt_list:
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
                                                 answers_dict)
-            
+            #st.write(f'{prompt_message_f}')
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier,
                                                             same_chat = True,
@@ -390,7 +390,7 @@ def document_generator():
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                             prompt_message, additional_formatting_requirements,
                                             answers_dict)
-            st.write(f'{prompt_message_f}')
+            #st.write(f'{prompt_message_f}')
 
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier)
@@ -449,8 +449,10 @@ def document_generator():
                     st.session_state.fact_check = True
 
     if st.session_state.get('fact_check', False):
+
         st.session_state.chatbot_initialized = False
         chatbot_with_pdfs(default=False, pdf_docs=st.session_state.all_files)
+        st.session_state.fact_check = False
 
 # Main Function
 def main():
