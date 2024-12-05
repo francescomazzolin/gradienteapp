@@ -295,7 +295,7 @@ def document_generator():
 
         configuration = tp.assistant_config(config, 'BO')
 
-        assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
+        assistant_identifier = tp.create_assistant(client, 'business_overview', configuration)
 
         vector_store = client.beta.vector_stores.create(name="Business Overview")
         vector_store_id = vector_store.id
@@ -346,7 +346,7 @@ def document_generator():
         #REFERENCE MARKET CREATION
         
         configuration = tp.assistant_config(config, 'RM')
-        assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
+        assistant_identifier = tp.create_assistant(client, 'ref_market_assistant', configuration)
 
         vector_store = client.beta.vector_stores.create(name="Reference Market")
         vector_store_id = vector_store.id
