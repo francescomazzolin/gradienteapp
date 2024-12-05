@@ -30,6 +30,13 @@ from datetime import datetime
 import streamlit as st
 
 
+def load_css(file_path):
+
+    with open(file_path) as f:
+        st.html(f'<style> {f.read()} </style>')
+
+
+
 def get_pdf_files_in_directory(directory):
     """Returns a list of PDF files in the given directory."""
     return [file for file in os.listdir(directory) if file.endswith('.pdf')]
@@ -96,8 +103,8 @@ def load_file_to_assistant(client, vector_storeid ,
         vector_store_id= vector_storeid, files=pdf_docs
         )
 
-        print(file_batch.status)
-        print(file_batch.file_counts)
+        #print(file_batch.status)
+        #print(file_batch.file_counts)
 
     else:
 
@@ -110,8 +117,8 @@ def load_file_to_assistant(client, vector_storeid ,
                 vector_store_id= vector_storeid, files=file_streams
             )
 
-            print(file_batch.status)
-            print(file_batch.file_counts)
+            #print(file_batch.status)
+            #print(file_batch.file_counts)
 
 
         finally:
@@ -176,7 +183,7 @@ def prompt_creator(prompt_df, prompt_name,
                    prompt_message, additional_formatting_requirements,
                    answers_dict):
     
-    
+    print('&'*40) 
     print(prompt_message)
 
     row = prompt_df[prompt_df['Placeholder'] == prompt_name]
@@ -273,7 +280,7 @@ def separate_thread_answers(client, prompt_message_format,
                     break
             if assistant_response:
                 break
-
+    print(assistant_response)
     return assistant_response, thread_identifier
 
 
@@ -411,6 +418,12 @@ DOCUMENT FORMATTING
 ==================================================================================================================
 """
 
+def format_spec(config):
+    font_size = config.get('document_format', 'font_size', fallback=None)
+    font_type = config.get('document_format', 'font_type', fallback=None)
+
+    return font_size, font_type
+
 def remove_source_patterns(text):
     """
     Removes patterns like   from the     
@@ -482,4 +495,69 @@ def adding_headers(document, title):
                         run.text = run.text.replace(sub, new)
 
 
+from docx.shared import RGBColor
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls
 
+#def highlight_paragraphs_with_keyword(doc_path, keyword):
+
+def highlight_paragraphs_with_keyword(doc, keyword, font_name, font_size):
+
+    print(f'The font name is: {font_name}')
+    print(f'The font size is: {font_size}')
+    # Iterate through each paragraph
+    for paragraph in doc.paragraphs:
+        if keyword in paragraph.text:
+            # Highlight the paragraph
+            shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00"/>'.format(nsdecls('w')))
+            paragraph._p.get_or_add_pPr().append(shading_elm)
+            
+            # Remove the keyword
+            paragraph.text = paragraph.text.replace(keyword, '').strip()
+            
+            # Apply font and size to all runs in the paragraph
+            for run in paragraph.runs:
+                run.font.name = font_name  # Set the font name
+                run.font.size = Pt(font_size)  # Set the font size
+    
+        
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
+def boldify_text_between_asterisks(doc_path):
+    """
+    Processes a Word document to replace text surrounded by asterisks with bold text.
+    
+    Args:
+        doc_path (str): Path to the input .docx file.
+        output_path (str): Path to save the modified .docx file.
+    """
+    # Open the document
+
+    # Iterate through all paragraphs in the document
+    for paragraph in doc_path.paragraphs:
+        # Split the paragraph text into runs for processing
+        for run in paragraph.runs:
+            # If the text contains asterisks
+            if "**" in run.text:
+                parts = run.text.split("**")
+                new_text = []
+                
+                # Iterate over parts to process asterisk-marked text
+                for i, part in enumerate(parts):
+                    if i % 2 == 1:  # Text between asterisks
+                        bold_run = paragraph.add_run(part)
+                        bold_run.bold = True
+                        # Copy formatting from the current run
+                        bold_run.font.size = run.font.size
+                        bold_run.font.name = run.font.name
+                        bold_run._element.rPr.rFonts.set(qn('w:eastAsia'), run.font.name)
+                    else:  # Regular text
+                        normal_run = paragraph.add_run(part)
+                        # Copy formatting from the current run
+                        normal_run.font.size = run.font.size
+                        normal_run.font.name = run.font.name
+                        normal_run._element.rPr.rFonts.set(qn('w:eastAsia'), run.font.name)
+                
+                # Clear the original run text
+                run.clear()

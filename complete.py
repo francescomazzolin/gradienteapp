@@ -13,6 +13,9 @@ import importlib
 import configparser
 import tiktoken
 
+
+import pathlib
+
 # Custom Functions Module
 import to_pager_functions_2 as tp
 importlib.reload(tp)
@@ -61,6 +64,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+css_path = pathlib.Path("style.css")
+
+tp.load_css(css_path)
+
+
 # Display Banner Image
 banner_path = "AI GRADIENTE VETTORIALE_page-0001.jpg"  # Update with the correct path
 st.image(banner_path, use_container_width=True)
@@ -84,6 +92,7 @@ option = st.selectbox(
     ('Select an application', 'Chatbot with PDFs', '2Pager Generator')
 )
 
+
 # Chatbot Functionality
 def chatbot_with_pdfs(default=True, pdf_docs=None):
 
@@ -102,7 +111,7 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
             st.subheader('Your documents')
             pdf_docs = st.file_uploader('Upload your PDFs here and click on Process', 
                                         accept_multiple_files=True)
-            if st.button('Process'):
+            if st.button('Process', key = 'red'):
                 if pdf_docs:
                     with st.spinner('Processing'):
                         # Process PDFs
@@ -129,11 +138,13 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
                 st.error('No documents to process. Please provide PDFs.')
 
     # Input for questions
-    user_question = st.chat_input('Ask a question about your documents:')
 
+    user_question = st.chat_input('Ask a question about your documents:')
+    
     # Process the question
     if user_question and st.session_state.conversation:
-        with st.spinner("Fetching response..."):
+        spinner = st.spinner("Fetching response...")
+        with spinner:
             try:
                 # Get the response from the conversation chain
                 response = st.session_state.conversation({'question': user_question})
@@ -172,18 +183,13 @@ def chatbot_with_pdfs(default=True, pdf_docs=None):
     st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
 
 
+
 # Document Generator Functionality
 def document_generator():
     
     milestone = [1]
     steps = 5
 
-    # Preloaded Files
-    xlsx_file = "prompt_db.xlsx"
-    docx_file = "to_pager_template.docx"
-
-    doc_copy = Document(docx_file)
-    
     # Initialize the OpenAI client
     client = openai.OpenAI()
 
@@ -193,6 +199,26 @@ def document_generator():
     
     # Read the .cfg file
     config.read('assistant_config.cfg')  # Replace with your file path
+
+    # Preloaded Files
+    #xlsx_file = "prompt_db.xlsx"
+    #print(xlsx_file)
+    #print(f'{type(xlsx_file)}')
+    xlsx_file = config.get('template', 'prompts', fallback = None)
+    #print(xlsx_file)
+    #print(f'{type(xlsx_file)}')
+    #docx_file = "to_pager_template.docx"
+    docx_file = config.get('template', 'word_template', fallback = None)
+
+    doc_copy = Document(docx_file)
+    
+    #Getting the fonts
+
+    font_size = config.get('document_format', 'font_size', fallback=None)
+    font_size = int(font_size)
+    print(f'The font_size is:{font_size}')
+    font_type = config.get('document_format', 'font_type', fallback=None)
+
 
     st.header('2Pager Generator :page_facing_up:')
     
@@ -230,8 +256,8 @@ def document_generator():
     """   )
     st.markdown(hide_enter_message, unsafe_allow_html=True)
     project_title = st.text_input("")
-
-    gen_button = st.button('Generate Document')
+    
+    gen_button = st.button('Generate Document', key = 'red')
 
     # Start the generation process
     if gen_button:
@@ -247,6 +273,15 @@ def document_generator():
         st.session_state.project_title = project_title
     
         #Initialize progress bar and creating a placeholder for dynamic text
+
+        st.markdown("""
+            <style>
+            .stProgress .st-bo {
+                background-color: #003966;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+        
         progress_bar = st.progress(0)  
         message_placeholder = st.empty() 
 
@@ -272,7 +307,7 @@ def document_generator():
         # Retrieve prompts and formatting requirements
         try:
             prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(
-                'prompt_db.xlsx', ['BO_Prompts', 'BO_Format_add'])
+                xlsx_file, ['BO_Prompts', 'BO_Format_add'])
         except Exception as e:
             st.error(f"Error retrieving prompts: {e}")
             return
@@ -281,13 +316,19 @@ def document_generator():
                               milestone, steps,
                               message="Generating Business Overview...")
         
+        thread = client.beta.threads.create()
+        thread_identifier = thread.id
+        #st.write(f'{prompt_list}')
         for prompt_name, prompt_message in prompt_list:
+            #st.write(f'{prompt_name}')
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
                                                 answers_dict)
-            
+            #st.write(f'{prompt_message_f}')
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
-                                                            assistant_identifier)
+                                                            assistant_identifier,
+                                                            same_chat = True,
+                                                            thread_id=thread_identifier)
             
             assistant_response = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 
@@ -336,13 +377,17 @@ def document_generator():
                               milestone, steps,
                               message="Generating Market Analysis...")
         
-        prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever('prompt_db.xlsx', 
+        prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(xlsx_file, 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
+        
+        #st.write(f'{prompt_list}')
+
         for prompt_name, prompt_message in prompt_list:
 
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                             prompt_message, additional_formatting_requirements,
                                             answers_dict)
+            #st.write(f'{prompt_message_f}')
 
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier)
@@ -370,19 +415,35 @@ def document_generator():
 
         tp.adding_headers(doc_copy, project_title)
 
+         #before_highlight = doc_copy
+
+        tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
+                                             font_name=font_type, font_size = font_size)
+
+        tp.boldify_text_between_asterisks(doc_copy)
+
     if st.session_state.get('document_generated', False):
         output_path = st.session_state.generated_doc_path
         doc_copy.save(output_path)
-        with open(output_path, "rb") as doc_file:
-            btn = st.download_button(
-                label="Download Document",
-                data=doc_file,
-                file_name=output_path,
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            )
-        fact_check_button = st.button('Fact Check')
-        if fact_check_button:
-            st.session_state.fact_check = True
+
+        st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+        # Create buttons inside the container
+        col1, spacer, col2 = st.columns([2, 4.5, 1.3])
+        
+        with col1:
+            with open(output_path, "rb") as doc_file:
+                btn = st.download_button(
+                    label="Download Document",
+                    data=doc_file,
+                    file_name=output_path,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key = 'reddown'
+                )
+            #fact_check_button = st.button('Fact Check', key = 'blue')
+            st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+            with col2:
+                if st.button('Fact Check', key ='blue'):
+                    st.session_state.fact_check = True
 
     if st.session_state.get('fact_check', False):
 
