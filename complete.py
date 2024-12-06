@@ -293,6 +293,8 @@ def document_generator():
         temp_responses = []
         answers_dict = {}
 
+        json_dict = {}
+
         configuration = tp.assistant_config(config, 'BO')
 
         assistant_identifier = tp.create_assistant(client, 'business_overview_salva', configuration)
@@ -320,15 +322,20 @@ def document_generator():
         thread_identifier = thread.id
         #st.write(f'{prompt_list}')
         for prompt_name, prompt_message in prompt_list:
-            #st.write(f'{prompt_name}')
+            st.write(f'{prompt_name}')
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
-                                                answers_dict)
+                                                answers_dict, json_dict = json_dict)
             #st.write(f'{prompt_message_f}')
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier,
                                                             same_chat = True,
                                                             thread_id=thread_identifier)
+            
+            json_dict = tp.json_schema_answer(client, prompt_df, prompt_name,
+                                              json_dict, assistant_response)
+
+            st.write(f'{json_dict}')
             
             assistant_response = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 

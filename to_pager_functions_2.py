@@ -7,6 +7,9 @@ Packages for environment selection
 import os  # Missing import for 'os'
 from dotenv import find_dotenv, load_dotenv
 
+import json
+from schemas import SCHEMA_REGISTRY
+
 """
 Packages for document writing
 """
@@ -141,13 +144,18 @@ Assistant Question and Answering functions
 """
 
 
-def get_answer(client, run, thread_identifier):
+import time
+
+def get_answer(client, run, thread_identifier, timeout=120):
+    start_time = time.time()
     while not run.status == "completed":
-        #print("Waiting for answer...")
+        if time.time() - start_time > timeout:
+            raise TimeoutError("Assistant run timed out.")
         run = client.beta.threads.runs.retrieve(
             thread_id=thread_identifier,
             run_id=run.id
         )
+    return run
 
 """
 The following function is about loading the prompts we will use to fill the document.
@@ -181,7 +189,7 @@ def prompts_retriever(file_name, sheet_list):
 
 def prompt_creator(prompt_df, prompt_name, 
                    prompt_message, additional_formatting_requirements,
-                   answers_dict):
+                   answers_dict, json_dict = {}):
     
     print('&'*40) 
     print(prompt_message)
@@ -197,6 +205,19 @@ def prompt_creator(prompt_df, prompt_name,
         reference = answers_dict[row['Links'].iloc[0]]
         prompt_message_format = reference
         prompt_message_format += prompt_message + additional_formatting_requirements
+
+    if pd.isna(row['JSON_use'].iloc[0]):
+        pass
+
+    else: 
+        json_reference = row['JSON_use'].iloc[0]
+        st.write(f'{json_reference}')
+        json_output = json_dict[json_reference]
+        st.write(f'{json_output}')
+        json_output_str = '\n'.join(json_output)
+        prompt_message_format = f'{prompt_message_format}'
+        prompt_message_format = prompt_message_format.replace("{json_output}", json_output_str)
+        #prompt_message_format = prompt_message_format.format(json_output = json_output)
     
     """
     We will iterate through all the prompts that are present in the .xlsx file.
@@ -282,6 +303,56 @@ def separate_thread_answers(client, prompt_message_format,
                 break
     print(assistant_response)
     return assistant_response, thread_identifier
+
+
+def json_schema_answer(client, prompt_df, prompt_name, json_dict,
+                       assistant_response):
+
+    row = prompt_df[prompt_df['Placeholder'] == prompt_name]
+
+    if pd.isna(row['JSON_make'].iloc[0]):
+
+        return json_dict
+
+    else:
+        st.write(f'entered in the correct control flow')
+        schema_name = row['JSON_make'].iloc[0]
+
+        json_schema = SCHEMA_REGISTRY[schema_name]
+
+        prompt = assistant_response
+
+        question = row['JSON_question'].iloc[0]
+
+        prompt += question
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": "You are a Private Equity Analyst assistant"},
+            {"role": "user", "content": prompt}],
+            
+            response_format={
+                "type": "json_schema",
+                "json_schema": json_schema
+            }
+        )
+        st.write(f'{response}')
+        json_string = response.choices[0].message.content
+
+        st.write(f'{json_string}')
+
+        # Parse the JSON string into a Python dictionary
+        parsed_json = json.loads(json_string)
+
+        st.write(f'{parsed_json}')
+
+        # Extract the Python list
+        companies_list = parsed_json.get("companies", [])
+
+        st.write(f'{companies_list}')
+        json_dict[schema_name] = companies_list
+
+        return json_dict
 
 
 def missing_warning(client, thread_id, prompt, assistant_identifier):
