@@ -16,6 +16,8 @@ Packages for document writing
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 #from docx.shared import Inches
 
 import openai
@@ -28,7 +30,7 @@ import requests
 from PyPDF2 import PdfReader
 from io import BytesIO
 from datetime import datetime
-
+import configparser
 
 import streamlit as st
 
@@ -43,6 +45,8 @@ def load_css(file_path):
 def get_pdf_files_in_directory(directory):
     """Returns a list of PDF files in the given directory."""
     return [file for file in os.listdir(directory) if file.endswith('.pdf')]
+
+
 
 
 """
@@ -189,7 +193,7 @@ def prompts_retriever(file_name, sheet_list):
 
 def prompt_creator(prompt_df, prompt_name, 
                    prompt_message, additional_formatting_requirements,
-                   answers_dict, json_dict = {}):
+                   answers_dict, json_dict = {}, item = ''):
     
     print('&'*40) 
     print(prompt_message)
@@ -218,6 +222,19 @@ def prompt_creator(prompt_df, prompt_name,
         prompt_message_format = f'{prompt_message_format}'
         prompt_message_format = prompt_message_format.replace("{json_output}", json_output_str)
         #prompt_message_format = prompt_message_format.format(json_output = json_output)
+    try:
+        if pd.isna(row['For_loop'].iloc[0]):
+
+            pass
+
+        else: 
+
+            prompt_message_format = f'{prompt_message_format}'
+            prompt_message_format = prompt_message_format.replace("{sector}", item)
+
+    except:
+        pass
+
     
     """
     We will iterate through all the prompts that are present in the .xlsx file.
@@ -514,23 +531,71 @@ def remove_source_patterns(text):
     return cleaned_text
 
 
-def document_filler(doc_copy, prompt_name, assistant_response):
+def document_filler(doc_copy, prompt_name, assistant_response, last_p, section_creator = False ):
     #First we loop through all the paragraphs.
-    for paragraph in doc_copy.paragraphs:
+    last_par_idx = last_p
+    if not section_creator:
+        for i, paragraph in enumerate(doc_copy.paragraphs):
 
-        #If the prompt_name correspond to the placeholder making up the paragraph
-        #we move to the filling part
-        if prompt_name in paragraph.text:
-            
-            #This is for formatting reasons to avoid alignment problems
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            #If the prompt_name correspond to the placeholder making up the paragraph
+            #we move to the filling part
+            if prompt_name in paragraph.text:
+                
+                #This is for formatting reasons to avoid alignment problems
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
-            #Then, we move to the run objects inside the paragraph.
-            #The reason is that in this way, when we replace the placeholder 
-            #we will keep the placeholder's formatting
-            for run in paragraph.runs:
-                if prompt_name in run.text:
-                    run.text = run.text.replace(prompt_name, assistant_response)
+                #Then, we move to the run objects inside the paragraph.
+                #The reason is that in this way, when we replace the placeholder 
+                #we will keep the placeholder's formatting
+                for run in paragraph.runs:
+                    if prompt_name in run.text:
+                        run.text = run.text.replace(prompt_name, assistant_response)
+                        last_par_idx = i
+
+    else: 
+        config = configparser.ConfigParser()
+    
+        # Read the .cfg file
+        config.read('assistant_config.cfg') 
+
+        font_size = config.get('document_format', 'font_size', fallback=None)
+        font_size = int(font_size)
+        font_type = config.get('document_format', 'font_type', fallback=None)
+
+        new_section_par = insert_paragraph_after(doc_copy.paragraphs[last_p],
+                                                 text= assistant_response,
+                                                 font_size= font_size, 
+                                                 font_type= font_type)
+        # After insertion, refresh the index by finding new_section_par in doc_copy.paragraphs
+        # The newly inserted paragraph will appear right after last_modified_idx.
+        # Since we inserted one after it, it should now be at last_modified_idx + 1.
+        
+        # One approach is to directly compute the index:
+        new_section_idx = last_p + 1
+
+        # Update last_modified_idx to this new paragraph
+        last_par_idx = new_section_idx
+
+    return last_par_idx
+        
+
+def insert_paragraph_after(paragraph, text=None, style=None, section = False, 
+                           font_size = None, font_type = None):
+
+    if not section:
+        new_p = OxmlElement('w:p')
+        paragraph._p.addnext(new_p)
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        new_paragraph = paragraph._parent.add_paragraph()
+        new_paragraph._p = new_p
+        #new_paragraph.style = 'List Bullet'
+        if text:
+            run = new_paragraph.add_run(text)
+            # Set the font properties
+            run.font.size = Pt(font_size)
+            run.font.name = font_type
+        
+    return new_paragraph
 
 def adding_headers(document, title):
 

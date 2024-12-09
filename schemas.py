@@ -43,7 +43,7 @@ SCHEMA_REGISTRY = {
     "additionalProperties": False
     },
 
-    "product_portfolio_impact": {
+    "market_analysis_request": {
     "name": "market_analysis_request",
     
     "schema": {
@@ -62,9 +62,12 @@ SCHEMA_REGISTRY = {
         "market_sectors"
         ],
         
-    },
-    "additionalProperties": False,
-    "strict": True
+    
+    
+        "strict": True,
+        "additionalProperties": False
+        }
+
     }
 
 
