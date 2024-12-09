@@ -222,8 +222,11 @@ def document_generator():
 
     st.header('2Pager Generator :page_facing_up:')
     
+
+    st.subheader('Company-specific files:')    
+    #st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
     # Inputs or configurations for the document generator
-    st.markdown('Upload your files here:')
+    #st.markdown('Upload your files here:')
 
     st.markdown(
     """
@@ -240,7 +243,27 @@ def document_generator():
     # Template Path Input
     pdf_docs = st.file_uploader('',accept_multiple_files=True)
     #st.write(f'{type(pdf_docs)}')
-    
+    st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+
+    st.subheader('Reference Market Files:')
+    additional_docs = st.file_uploader('', accept_multiple_files=True, key='additional_docs')
+
+    st.markdown('Key markets to analyze:')
+
+    hide_enter_message = (
+    """
+    <style>
+    div[data-testid="stTextInput"] {
+        margin-top: -50px;
+    }
+    div[data-testid="InputInstructions"] > span:nth-child(1) {
+    visibility: hidden;
+    }
+    </style>
+    """   )
+    st.markdown(hide_enter_message, unsafe_allow_html=True)
+    markets = st.text_input("", key="markets_input")
+
     st.markdown('Project title:')
 
     hide_enter_message = (
@@ -320,7 +343,7 @@ def document_generator():
         
         thread = client.beta.threads.create()
         thread_identifier = thread.id
-        #st.write(f'{prompt_list}')
+        #st.write(f'Reference market: {prompt_list}')
         for prompt_name, prompt_message in prompt_list:
             st.write(f'{prompt_name}')
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
@@ -387,17 +410,20 @@ def document_generator():
         prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(xlsx_file, 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         
-        #st.write(f'{prompt_list}')
+        st.write(f'Reference market: {prompt_list}')
 
         for prompt_name, prompt_message in prompt_list:
 
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
-                                            prompt_message, additional_formatting_requirements,
-                                            answers_dict)
+                                                prompt_message, additional_formatting_requirements,
+                                                answers_dict, json_dict = json_dict)
             #st.write(f'{prompt_message_f}')
 
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier)
+            
+            json_dict = tp.json_schema_answer(client, prompt_df, prompt_name,
+                                              json_dict, assistant_response)
             
             assistant_response = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 

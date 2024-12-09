@@ -37,14 +37,35 @@ SCHEMA_REGISTRY = {
         "product_name",
         "impact_percentage"
         ],
-        "additionalProperties": false
+        
     },
-    "strict": true
+    "strict": True,
+    "additionalProperties": False
+    },
+
+    "product_portfolio_impact": {
+    "name": "market_analysis_request",
+    
+    "schema": {
+        "type": "object",
+        "properties": {
+        "market_sectors": {
+            "type": "array",
+            "description": "A list of markets or sectors for which market analysis is requested.",
+            "items": {
+            "type": "string",
+            "description": "A specific market or sector."
+            }
+        }
+        },
+        "required": [
+        "market_sectors"
+        ],
+        
+    },
+    "additionalProperties": False,
+    "strict": True
     }
-
-
-
-
 
 
 
