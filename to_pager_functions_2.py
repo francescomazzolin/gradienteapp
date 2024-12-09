@@ -109,9 +109,9 @@ def load_file_to_assistant(client, vector_storeid ,
         file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
         vector_store_id= vector_storeid, files=pdf_docs
         )
-
-        #print(file_batch.status)
-        #print(file_batch.file_counts)
+        #st.write('\nUPLOADING THE DOCUMENTS\n')
+        #st.write(file_batch.status)
+        #st.write(file_batch.file_counts)
 
     else:
 
@@ -124,8 +124,9 @@ def load_file_to_assistant(client, vector_storeid ,
                 vector_store_id= vector_storeid, files=file_streams
             )
 
-            #print(file_batch.status)
-            #print(file_batch.file_counts)
+            st.write('\nUPLOADING THE DOCUMENTS\n')
+            st.write(file_batch.status)
+            st.write(file_batch.file_counts)
 
 
         finally:
@@ -215,9 +216,9 @@ def prompt_creator(prompt_df, prompt_name,
 
     else: 
         json_reference = row['JSON_use'].iloc[0]
-        st.write(f'{json_reference}')
+        #st.write(f'{json_reference}')
         json_output = json_dict[json_reference]
-        st.write(f'{json_output}')
+        #st.write(f'{json_output}')
         json_output_str = '\n'.join(json_output)
         prompt_message_format = f'{prompt_message_format}'
         prompt_message_format = prompt_message_format.replace("{json_output}", json_output_str)
@@ -332,7 +333,7 @@ def json_schema_answer(client, prompt_df, prompt_name, json_dict,
         return json_dict
 
     else:
-        st.write(f'entered in the correct control flow')
+        #st.write(f'entered in the correct control flow')
         schema_name = row['JSON_make'].iloc[0]
 
         json_schema = SCHEMA_REGISTRY[schema_name]
@@ -353,20 +354,20 @@ def json_schema_answer(client, prompt_df, prompt_name, json_dict,
                 "json_schema": json_schema
             }
         )
-        st.write(f'{response}')
+        #st.write(f'{response}')
         json_string = response.choices[0].message.content
 
-        st.write(f'{json_string}')
+        #st.write(f'{json_string}')
 
         # Parse the JSON string into a Python dictionary
         parsed_json = json.loads(json_string)
 
-        st.write(f'{parsed_json}')
+        #st.write(f'{parsed_json}')
 
         # Extract the Python list
         companies_list = parsed_json.get("companies", [])
 
-        st.write(f'{companies_list}')
+        #st.write(f'{companies_list}')
         json_dict[schema_name] = companies_list
 
         return json_dict
@@ -384,8 +385,8 @@ def missing_warning(client, thread_id, prompt, assistant_identifier):
     """
 
     warning, x = separate_thread_answers(client, prompt, assistant_identifier)
-
-    warning += " Highlight!$%"
+    #warning = "Highlight!$% " + warning
+    #warning += " Highlight!$%"
 
     return warning
 
@@ -393,15 +394,19 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
 
     if "not_found" not in answer.lower():
 
-        return answer
+        highlight = False
+
+        return answer, highlight
     
     else:
 
         warning = missing_warning(client, thread_id, prompt, assistant_identifier)
-        #st.write(f'To the prompt: {prompt}')
-        #st.write(f'Gives waring: {warning}')
+        st.write(f'To the prompt: {prompt}')
+        st.write(f'Gives waring: {warning}')
 
-        return warning
+        highlight = True
+
+        return warning, highlight
 
 
 """
@@ -531,7 +536,8 @@ def remove_source_patterns(text):
     return cleaned_text
 
 
-def document_filler(doc_copy, prompt_name, assistant_response, last_p, section_creator = False ):
+def document_filler(doc_copy, prompt_name, assistant_response, last_p, 
+                    section_creator = False, highlighting=False):
     #First we loop through all the paragraphs.
     last_par_idx = last_p
     if not section_creator:
@@ -550,6 +556,11 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p, section_c
                 for run in paragraph.runs:
                     if prompt_name in run.text:
                         run.text = run.text.replace(prompt_name, assistant_response)
+                        if highlighting:
+                            # Create a shading XML element to highlight the run
+                            shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
+                            run._r.get_or_add_rPr().append(shading_elm)
+
                         last_par_idx = i
 
     else: 
@@ -569,6 +580,12 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p, section_c
         # After insertion, refresh the index by finding new_section_par in doc_copy.paragraphs
         # The newly inserted paragraph will appear right after last_modified_idx.
         # Since we inserted one after it, it should now be at last_modified_idx + 1.
+
+        if highlighting:
+            # Apply shading to the entire paragraph or each run if needed
+            for run in new_section_par.runs:
+                shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
+                run._r.get_or_add_rPr().append(shading_elm)
         
         # One approach is to directly compute the index:
         new_section_idx = last_p + 1
@@ -580,7 +597,7 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p, section_c
         
 
 def insert_paragraph_after(paragraph, text=None, style=None, section = False, 
-                           font_size = None, font_type = None):
+                           font_size = None, font_type = None, last_p = None, doc_copy = None):
 
     if not section:
         new_p = OxmlElement('w:p')
@@ -594,8 +611,28 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
             # Set the font properties
             run.font.size = Pt(font_size)
             run.font.name = font_type
+
+        return new_paragraph
+
+    else:
+
+        last_paragraph = paragraph._parent.paragraphs[last_p]
+        new_p = OxmlElement('w:p')
+        last_paragraph._p.addnext(new_p)
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        new_paragraph = paragraph._parent.add_paragraph()
+        new_paragraph._p = new_p
+        #new_paragraph.style = 'List Bullet'
+        if text:
+            run = new_paragraph.add_run(text)
+            # Set the font properties
+            run.font.size = Pt(font_size)
+            run.font.name = font_type
+            run.bold = True
         
-    return new_paragraph
+        last_p += 1
+        
+        return new_paragraph, last_p
 
 def adding_headers(document, title):
 
@@ -655,8 +692,49 @@ def highlight_paragraphs_with_keyword(doc, keyword, font_name, font_size):
             for run in paragraph.runs:
                 run.font.name = font_name  # Set the font name
                 run.font.size = Pt(font_size)  # Set the font size
+
+from docx import Document
+from docx.oxml.ns import nsdecls
+from docx.oxml import parse_xml
+from docx.shared import Pt    
+
+def highlight_sections(doc, keyword, font_name, font_size):
+    print(f'The font name is: {font_name}')
+    print(f'The font size is: {font_size}')
     
-        
+    highlighting = False  # Indicates if we are currently in a highlight section
+    for paragraph in doc.paragraphs:
+        text = paragraph.text
+
+        if keyword in text: 
+
+            paragraph.text = paragraph.text.replace(keyword, '')
+            highlighting = not highlighting
+
+        for run in paragraph.runs:
+            text = run.text
+            # Check if there's a highlight marker in this run
+            if keyword in text:
+                # Remove the keyword from the run text
+                run.text = run.text.replace(keyword, '')
+                # Toggle the highlighting state
+                highlighting = not highlighting
+                # After toggling, if highlighting is now on, highlight the run
+                # If highlighting just turned off, this run will end highlighting.
+            
+            # If currently highlighting, apply highlight and formatting
+            if highlighting:
+                # Add shading to this run
+                shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00"/>'.format(nsdecls('w')))
+                rPr = run._r.get_or_add_rPr()
+                rPr.append(shading_elm)
+
+                # Apply font and size
+                run.font.name = font_name
+                run.font.size = Pt(font_size)
+
+
+
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 

@@ -359,7 +359,7 @@ please do not include the word "market" in the description unless strictly neces
         thread_identifier = thread.id
         #st.write(f'Reference market: {prompt_list}')
         for prompt_name, prompt_message in prompt_list:
-            st.write(f'{prompt_name}')
+            #st.write(f'{prompt_name}')
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
                                                 answers_dict, json_dict = json_dict)
@@ -372,9 +372,9 @@ please do not include the word "market" in the description unless strictly neces
             json_dict = tp.json_schema_answer(client, prompt_df, prompt_name,
                                               json_dict, assistant_response)
 
-            st.write(f'{json_dict}')
+            #st.write(f'{json_dict}')
             
-            assistant_response = tp.warning_check(assistant_response, client,
+            assistant_response, highlight = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 
                                                   assistant_identifier)
             
@@ -382,12 +382,14 @@ please do not include the word "market" in the description unless strictly neces
                 temp_responses.append(assistant_response)
                 assistant_response = tp.remove_source_patterns(assistant_response)
                 answers_dict[prompt_name] = assistant_response
-                last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p)
+                last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p,
+                                            highlighting = highlight)
             else:
                 st.warning(f"No response for prompt '{prompt_name}'.")
         
-        
-        #REFERENCE MARKET CREATION
+        ###############################################################################################################
+        #REFERENCE MARKET INTRODUCTION
+        ###############################################################################################################
         
         configuration = tp.assistant_config(config, 'RM')
         assistant_identifier = tp.create_assistant(client, 'ref_market_assistant_salva', configuration)
@@ -405,17 +407,18 @@ please do not include the word "market" in the description unless strictly neces
         
         retrieved_files = tp.html_retriever(market_docs)
         st.session_state.retrieved_files = retrieved_files
-
+        
         all_files = file_streams + retrieved_files
         st.session_state.all_files = all_files
+        #st.write(f'\n{all_files}')
+        #if retrieved_files:
+        #st.write('It is Uploading the MARKET files')
+        tp.load_file_to_assistant(client, vector_store_id,
+                                    assistant_identifier, retrieved_files,
+                                    uploaded = False)
 
-        if retrieved_files:
-
-            tp.load_file_to_assistant(client, vector_store_id,
-                                        assistant_identifier, retrieved_files,
-                                        uploaded = False)
-
-
+        #else:
+        #st.write(f'NOT UPLOADING MARKET FILES')
 
         tp.update_progressbar(progress_bar, message_placeholder,
                               milestone, steps,
@@ -424,7 +427,7 @@ please do not include the word "market" in the description unless strictly neces
         prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(xlsx_file, 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         
-        st.write(f'Reference market: {prompt_list}')
+        #st.write(f'Reference market: {prompt_list}')
         
         loop_length = len(prompt_list)
         counter = 0
@@ -473,15 +476,15 @@ please do not include the word "market" in the description unless strictly neces
                         "json_schema": json_schema
                     }
                 )
-                st.write(f'{response}')
+                #st.write(f'{response}')
                 json_string = response.choices[0].message.content
 
-                st.write(f'{json_string}')
+                #st.write(f'{json_string}')
 
                 # Parse the JSON string into a Python dictionary
                 parsed_json = json.loads(json_string)
 
-                st.write(f'{parsed_json}')
+                #st.write(f'{parsed_json}')
 
                 # Extract the Python list
                 check_list = parsed_json.get("market_sectors", [])
@@ -497,7 +500,14 @@ please do not include the word "market" in the description unless strictly neces
 
                 if check_list is not None:
 
-                    st.write('New section')
+                    #st.write('New section')
+                    new_section_par, last_p = tp.insert_paragraph_after(doc_copy.paragraphs[last_p],
+                                                 text= item,
+                                                 font_size= font_size, 
+                                                 font_type= font_type,
+                                                 section = True,
+                                                 last_p = last_p,
+                                                 doc_copy = doc_copy)
 
                 for prompt_name, prompt_message in for_list:
 
@@ -524,7 +534,7 @@ please do not include the word "market" in the description unless strictly neces
                     json_dict = tp.json_schema_answer(client, prompt_df, prompt_name,
                                                     json_dict, assistant_response)
                     
-                    assistant_response = tp.warning_check(assistant_response, client,
+                    assistant_response, highlight = tp.warning_check(assistant_response, client,
                                                         thread_id, prompt_message, 
                                                         assistant_identifier)
                     
@@ -540,19 +550,23 @@ please do not include the word "market" in the description unless strictly neces
 
                     if item is None:
 
-                        last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p)
+                        last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p,
+                                                    highlighting = highlight)
                         print(f'The last paragraph-position is: {last_p}')
 
                     else: 
                         
                         last_p = tp.document_filler(doc_copy, prompt_name, assistant_response,
-                                                    section_creator = True, last_p = last_p)
+                                                    section_creator = True, last_p = last_p,
+                                                    highlighting = highlight)
                         print(f'The last paragraph-position is: {last_p}')
             
 
                     
 
                 counter += len(for_list)
+
+                
         tp.update_progressbar(progress_bar, message_placeholder,
                                     milestone, steps,
                                     message = "Formatting the document...")
@@ -561,33 +575,52 @@ please do not include the word "market" in the description unless strictly neces
 
         #before_highlight = doc_copy
 
-        tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
-                                            font_name=font_type, font_size = font_size)
+        #tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
+                                            #font_name=font_type, font_size = font_size)
+
+        #tp.highlight_sections(doc_copy, keyword = "Highlight!$%",
+                              #font_name=font_type, font_size = font_size)
 
         tp.boldify_text_between_asterisks(doc_copy)
+        st.session_state.ans_dic = answers_dict
 
-        if st.session_state.get('document_generated', False):
-            output_path = st.session_state.generated_doc_path
-            doc_copy.save(output_path)
+    if st.session_state.get('document_generated', False):
+        output_path = st.session_state.generated_doc_path
+        doc_copy.save(output_path)
 
-            st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
-            # Create buttons inside the container
-            col1, spacer, col2 = st.columns([2, 4.5, 1.3])
+        st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+        # Create buttons inside the container
+        col1, spacer, col2 = st.columns([2, 4.5, 1.3])
+        
+        #answers_dict = st.session_state.get('ans_dic')
+        #pickle_path= f"{project_title}_answers_dict.pkl"
+        #with open(pickle_path, "wb") as pickle_file:
+         #       pickle.dump(answers_dict, pickle_file)
+        
+        with col1:
+            with open(output_path, "rb") as doc_file:
+                btn = st.download_button(
+                    label="Download Document",
+                    data=doc_file,
+                    file_name=output_path,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    key = 'reddown'
+                )
+            pickle_path = f"{project_title}_answers_dict.pkl"
             
-            with col1:
-                with open(output_path, "rb") as doc_file:
-                    btn = st.download_button(
-                        label="Download Document",
-                        data=doc_file,
-                        file_name=output_path,
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        key = 'reddown'
-                    )
-                #fact_check_button = st.button('Fact Check', key = 'blue')
-                st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
-                with col2:
-                    if st.button('Fact Check', key ='blue'):
-                        st.session_state.fact_check = True
+            #with open(pickle_path, "rb") as pkl_file:
+                #st.download_button(
+                    #label="Download Answers Dictionary (Pickle)",
+                    #data=pkl_file,
+                    #file_name=pickle_path,
+                    #mime="application/octet-stream",
+                    #key='pickle_download'
+                #)
+            #fact_check_button = st.button('Fact Check', key = 'blue')
+            st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+            with col2:
+                if st.button('Fact Check', key ='blue'):
+                    st.session_state.fact_check = True
 
     if st.session_state.get('fact_check', False):
 
