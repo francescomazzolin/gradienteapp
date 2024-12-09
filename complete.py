@@ -12,6 +12,8 @@ import pickle
 import importlib
 import configparser
 import tiktoken
+from schemas import SCHEMA_REGISTRY
+import json
 
 
 import pathlib
@@ -222,8 +224,11 @@ def document_generator():
 
     st.header('2Pager Generator :page_facing_up:')
     
+
+    st.subheader('Company-specific files:')    
+    #st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
     # Inputs or configurations for the document generator
-    st.markdown('Upload your files here:')
+    #st.markdown('Upload your files here:')
 
     st.markdown(
     """
@@ -240,7 +245,28 @@ def document_generator():
     # Template Path Input
     pdf_docs = st.file_uploader('',accept_multiple_files=True)
     #st.write(f'{type(pdf_docs)}')
-    
+    st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+
+    st.subheader('Reference Market Files:')
+    additional_docs = st.file_uploader('', accept_multiple_files=True, key='additional_docs')
+
+    st.markdown('Key markets to analyze:')
+
+    hide_enter_message = (
+    """
+    <style>
+    div[data-testid="stTextInput"] {
+        margin-top: -50px;
+    }
+    div[data-testid="InputInstructions"] > span:nth-child(1) {
+    visibility: hidden;
+    }
+    </style>
+    """   )
+    st.markdown(hide_enter_message, unsafe_allow_html=True)
+
+    markets = st.text_input("", key="markets_input")
+
     st.markdown('Project title:')
 
     hide_enter_message = (
@@ -259,12 +285,23 @@ def document_generator():
     
     gen_button = st.button('Generate Document', key = 'red')
 
+    for_dict = {0: [None] ,
+                1: [f"""given the followin textual description of the markets the analyst wants to be analyzed:
+
+{markets}
+
+please give me the list of markets the analyst wants to be analyzed.
+
+please do not include the word "market" in the description unless strictly necessary.""", markets,"market_analysis_request"]}
+
     # Start the generation process
     if gen_button:
         
         #Persistent variables that we need across sessions
         file_streams = pdf_docs
+        market_docs = additional_docs
         output_path = f'{project_title}.docx'
+        last_p = 0 
 
         #This willl update the session_state so that 
         st.session_state.document_generated = True
@@ -293,9 +330,11 @@ def document_generator():
         temp_responses = []
         answers_dict = {}
 
+        json_dict = {}
+
         configuration = tp.assistant_config(config, 'BO')
 
-        assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
+        assistant_identifier = tp.create_assistant(client, 'business_overview_salva', configuration)
 
         vector_store = client.beta.vector_stores.create(name="Business Overview")
         vector_store_id = vector_store.id
@@ -318,19 +357,24 @@ def document_generator():
         
         thread = client.beta.threads.create()
         thread_identifier = thread.id
-        #st.write(f'{prompt_list}')
+        #st.write(f'Reference market: {prompt_list}')
         for prompt_name, prompt_message in prompt_list:
             #st.write(f'{prompt_name}')
             prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
                                                 prompt_message, additional_formatting_requirements,
-                                                answers_dict)
+                                                answers_dict, json_dict = json_dict)
             #st.write(f'{prompt_message_f}')
             assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
                                                             assistant_identifier,
                                                             same_chat = True,
                                                             thread_id=thread_identifier)
             
-            assistant_response = tp.warning_check(assistant_response, client,
+            json_dict = tp.json_schema_answer(client, prompt_df, prompt_name,
+                                              json_dict, assistant_response)
+
+            #st.write(f'{json_dict}')
+            
+            assistant_response, highlight = tp.warning_check(assistant_response, client,
                                                   thread_id, prompt_message, 
                                                   assistant_identifier)
             
@@ -338,15 +382,17 @@ def document_generator():
                 temp_responses.append(assistant_response)
                 assistant_response = tp.remove_source_patterns(assistant_response)
                 answers_dict[prompt_name] = assistant_response
-                tp.document_filler(doc_copy, prompt_name, assistant_response)
+                last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p,
+                                            highlighting = highlight)
             else:
                 st.warning(f"No response for prompt '{prompt_name}'.")
         
-        
-        #REFERENCE MARKET CREATION
+        ###############################################################################################################
+        #REFERENCE MARKET INTRODUCTION
+        ###############################################################################################################
         
         configuration = tp.assistant_config(config, 'RM')
-        assistant_identifier = tp.create_assistant(client, 'final_test', configuration)
+        assistant_identifier = tp.create_assistant(client, 'ref_market_assistant_salva', configuration)
 
         vector_store = client.beta.vector_stores.create(name="Reference Market")
         vector_store_id = vector_store.id
@@ -359,19 +405,20 @@ def document_generator():
                               milestone, steps,
                               message="Searching online...")
         
-        retrieved_files = tp.html_retriever(file_streams)
+        retrieved_files = tp.html_retriever(market_docs)
         st.session_state.retrieved_files = retrieved_files
-
+        
         all_files = file_streams + retrieved_files
         st.session_state.all_files = all_files
+        #st.write(f'\n{all_files}')
+        #if retrieved_files:
+        #st.write('It is Uploading the MARKET files')
+        tp.load_file_to_assistant(client, vector_store_id,
+                                    assistant_identifier, retrieved_files,
+                                    uploaded = False)
 
-        if retrieved_files:
-
-            tp.load_file_to_assistant(client, vector_store_id,
-                                        assistant_identifier, retrieved_files,
-                                        uploaded = False)
-
-
+        #else:
+        #st.write(f'NOT UPLOADING MARKET FILES')
 
         tp.update_progressbar(progress_bar, message_placeholder,
                               milestone, steps,
@@ -380,47 +427,162 @@ def document_generator():
         prompt_list, additional_formatting_requirements, prompt_df = tp.prompts_retriever(xlsx_file, 
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         
-        #st.write(f'{prompt_list}')
+        #st.write(f'Reference market: {prompt_list}')
+        
+        loop_length = len(prompt_list)
+        counter = 0
+        while counter < loop_length:
 
-        for prompt_name, prompt_message in prompt_list:
+            current_tuple = prompt_list[counter]
+            prompt_name = current_tuple[0]
+            prompt_message = current_tuple[1]
 
-            prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
-                                            prompt_message, additional_formatting_requirements,
-                                            answers_dict)
-            #st.write(f'{prompt_message_f}')
+            row = prompt_df[prompt_df['Placeholder'] == prompt_name]
+            print(row)
 
-            assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
-                                                            assistant_identifier)
+            if pd.notna(row['For_loop'].iloc[0]):
+
+                loop_number = row['For_loop'].iloc[0]
+                
+                print(f'The loop_number is: {loop_number}')
+
+                temp = prompt_df[prompt_df['For_loop'] == loop_number]
+
+                for_list = list(zip(temp['Placeholder'], temp['Prompt']))
+                print(f'The for prompt list is: {for_list}')
+                start_json = for_dict[loop_number]
+                print(f'The list of the dictionary is: {start_json}')
             
-            assistant_response = tp.warning_check(assistant_response, client,
-                                                  thread_id, prompt_message, 
-                                                  assistant_identifier)
+                schema_name = start_json[2]
+                print(f'The schema name is: {schema_name}')
+
+                json_schema = SCHEMA_REGISTRY[schema_name]
+
+                #print(f'The json_schema is: {json_schema}')
+                
+
+                prompt = start_json[0].format(markets = start_json[1])
+                #question = row['JSON_question'].iloc[0]
+
+                #prompt += question
+
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[{"role": "system", "content": "You are a Private Equity Analyst assistant"},
+                    {"role": "user", "content": prompt}],
+                    
+                    response_format={
+                        "type": "json_schema",
+                        "json_schema": json_schema
+                    }
+                )
+                #st.write(f'{response}')
+                json_string = response.choices[0].message.content
+
+                #st.write(f'{json_string}')
+
+                # Parse the JSON string into a Python dictionary
+                parsed_json = json.loads(json_string)
+
+                #st.write(f'{parsed_json}')
+
+                # Extract the Python list
+                check_list = parsed_json.get("market_sectors", [])
+                print(f'The check list is: {check_list}')
+
+            else:
+
+                for_list = [(prompt_name, prompt_message)]
+                check_list = for_dict[0]
+        #for prompt_name, prompt_message in prompt_list:
+
+            for item in check_list: 
+
+                if check_list is not None:
+
+                    #st.write('New section')
+                    new_section_par, last_p = tp.insert_paragraph_after(doc_copy.paragraphs[last_p],
+                                                 text= item,
+                                                 font_size= font_size, 
+                                                 font_type= font_type,
+                                                 section = True,
+                                                 last_p = last_p,
+                                                 doc_copy = doc_copy)
+
+                for prompt_name, prompt_message in for_list:
+
+                    if item is None:
+
+                        prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
+                                                            prompt_message, additional_formatting_requirements,
+                                                            answers_dict, json_dict = json_dict)
+
+                    else: 
+                        
+                        prompt_message_f = tp.prompt_creator(prompt_df, prompt_name, 
+                                                            prompt_message, additional_formatting_requirements,
+                                                            answers_dict, json_dict = json_dict,
+                                                            item = item)
+                        
+                        
+
+                    #st.write(f'{prompt_message_f}')
+
+                    assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
+                                                                    assistant_identifier)
+                    
+                    json_dict = tp.json_schema_answer(client, prompt_df, prompt_name,
+                                                    json_dict, assistant_response)
+                    
+                    assistant_response, highlight = tp.warning_check(assistant_response, client,
+                                                        thread_id, prompt_message, 
+                                                        assistant_identifier)
+                    
+
+                    if assistant_response:
+                        print(f"Assistant response for prompt '{prompt_name}': {assistant_response}")
+
+                    temp_responses.append(assistant_response)
+
+                    assistant_response = tp.remove_source_patterns(assistant_response)
+
+                    answers_dict[prompt_name] = assistant_response
+
+                    if item is None:
+
+                        last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p,
+                                                    highlighting = highlight)
+                        print(f'The last paragraph-position is: {last_p}')
+
+                    else: 
+                        
+                        last_p = tp.document_filler(doc_copy, prompt_name, assistant_response,
+                                                    section_creator = True, last_p = last_p,
+                                                    highlighting = highlight)
+                        print(f'The last paragraph-position is: {last_p}')
             
 
-            if assistant_response:
-                print(f"Assistant response for prompt '{prompt_name}': {assistant_response}")
+                    
 
-            temp_responses.append(assistant_response)
+                counter += len(for_list)
 
-            assistant_response = tp.remove_source_patterns(assistant_response)
-
-            answers_dict[prompt_name] = assistant_response
-
-            tp.document_filler(doc_copy, prompt_name, assistant_response)
-    
-
+                
         tp.update_progressbar(progress_bar, message_placeholder,
-                              milestone, steps,
-                              message = "Formatting the document...")
+                                    milestone, steps,
+                                    message = "Formatting the document...")
 
         tp.adding_headers(doc_copy, project_title)
 
-         #before_highlight = doc_copy
+        #before_highlight = doc_copy
 
-        tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
-                                             font_name=font_type, font_size = font_size)
+        #tp.highlight_paragraphs_with_keyword(doc_copy, keyword = " Highlight!$%",
+                                            #font_name=font_type, font_size = font_size)
+
+        #tp.highlight_sections(doc_copy, keyword = "Highlight!$%",
+                              #font_name=font_type, font_size = font_size)
 
         tp.boldify_text_between_asterisks(doc_copy)
+        st.session_state.ans_dic = answers_dict
 
     if st.session_state.get('document_generated', False):
         output_path = st.session_state.generated_doc_path
@@ -429,6 +591,11 @@ def document_generator():
         st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
         # Create buttons inside the container
         col1, spacer, col2 = st.columns([2, 4.5, 1.3])
+        
+        #answers_dict = st.session_state.get('ans_dic')
+        #pickle_path= f"{project_title}_answers_dict.pkl"
+        #with open(pickle_path, "wb") as pickle_file:
+         #       pickle.dump(answers_dict, pickle_file)
         
         with col1:
             with open(output_path, "rb") as doc_file:
@@ -439,6 +606,16 @@ def document_generator():
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     key = 'reddown'
                 )
+            pickle_path = f"{project_title}_answers_dict.pkl"
+            
+            #with open(pickle_path, "rb") as pkl_file:
+                #st.download_button(
+                    #label="Download Answers Dictionary (Pickle)",
+                    #data=pkl_file,
+                    #file_name=pickle_path,
+                    #mime="application/octet-stream",
+                    #key='pickle_download'
+                #)
             #fact_check_button = st.button('Fact Check', key = 'blue')
             st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             with col2:
@@ -460,3 +637,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

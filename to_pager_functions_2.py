@@ -7,12 +7,17 @@ Packages for environment selection
 import os  # Missing import for 'os'
 from dotenv import find_dotenv, load_dotenv
 
+import json
+from schemas import SCHEMA_REGISTRY
+
 """
 Packages for document writing
 """
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 #from docx.shared import Inches
 
 import openai
@@ -25,7 +30,7 @@ import requests
 from PyPDF2 import PdfReader
 from io import BytesIO
 from datetime import datetime
-
+import configparser
 
 import streamlit as st
 
@@ -40,6 +45,8 @@ def load_css(file_path):
 def get_pdf_files_in_directory(directory):
     """Returns a list of PDF files in the given directory."""
     return [file for file in os.listdir(directory) if file.endswith('.pdf')]
+
+
 
 
 """
@@ -102,9 +109,9 @@ def load_file_to_assistant(client, vector_storeid ,
         file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
         vector_store_id= vector_storeid, files=pdf_docs
         )
-
-        #print(file_batch.status)
-        #print(file_batch.file_counts)
+        #st.write('\nUPLOADING THE DOCUMENTS\n')
+        #st.write(file_batch.status)
+        #st.write(file_batch.file_counts)
 
     else:
 
@@ -117,8 +124,9 @@ def load_file_to_assistant(client, vector_storeid ,
                 vector_store_id= vector_storeid, files=file_streams
             )
 
-            #print(file_batch.status)
-            #print(file_batch.file_counts)
+            st.write('\nUPLOADING THE DOCUMENTS\n')
+            st.write(file_batch.status)
+            st.write(file_batch.file_counts)
 
 
         finally:
@@ -141,13 +149,18 @@ Assistant Question and Answering functions
 """
 
 
-def get_answer(client, run, thread_identifier):
+import time
+
+def get_answer(client, run, thread_identifier, timeout=120):
+    start_time = time.time()
     while not run.status == "completed":
-        #print("Waiting for answer...")
+        if time.time() - start_time > timeout:
+            raise TimeoutError("Assistant run timed out.")
         run = client.beta.threads.runs.retrieve(
             thread_id=thread_identifier,
             run_id=run.id
         )
+    return run
 
 """
 The following function is about loading the prompts we will use to fill the document.
@@ -181,7 +194,7 @@ def prompts_retriever(file_name, sheet_list):
 
 def prompt_creator(prompt_df, prompt_name, 
                    prompt_message, additional_formatting_requirements,
-                   answers_dict):
+                   answers_dict, json_dict = {}, item = ''):
     
     print('&'*40) 
     print(prompt_message)
@@ -197,6 +210,32 @@ def prompt_creator(prompt_df, prompt_name,
         reference = answers_dict[row['Links'].iloc[0]]
         prompt_message_format = reference
         prompt_message_format += prompt_message + additional_formatting_requirements
+
+    if pd.isna(row['JSON_use'].iloc[0]):
+        pass
+
+    else: 
+        json_reference = row['JSON_use'].iloc[0]
+        #st.write(f'{json_reference}')
+        json_output = json_dict[json_reference]
+        #st.write(f'{json_output}')
+        json_output_str = '\n'.join(json_output)
+        prompt_message_format = f'{prompt_message_format}'
+        prompt_message_format = prompt_message_format.replace("{json_output}", json_output_str)
+        #prompt_message_format = prompt_message_format.format(json_output = json_output)
+    try:
+        if pd.isna(row['For_loop'].iloc[0]):
+
+            pass
+
+        else: 
+
+            prompt_message_format = f'{prompt_message_format}'
+            prompt_message_format = prompt_message_format.replace("{sector}", item)
+
+    except:
+        pass
+
     
     """
     We will iterate through all the prompts that are present in the .xlsx file.
@@ -284,6 +323,56 @@ def separate_thread_answers(client, prompt_message_format,
     return assistant_response, thread_identifier
 
 
+def json_schema_answer(client, prompt_df, prompt_name, json_dict,
+                       assistant_response):
+
+    row = prompt_df[prompt_df['Placeholder'] == prompt_name]
+
+    if pd.isna(row['JSON_make'].iloc[0]):
+
+        return json_dict
+
+    else:
+        #st.write(f'entered in the correct control flow')
+        schema_name = row['JSON_make'].iloc[0]
+
+        json_schema = SCHEMA_REGISTRY[schema_name]
+
+        prompt = assistant_response
+
+        question = row['JSON_question'].iloc[0]
+
+        prompt += question
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": "You are a Private Equity Analyst assistant"},
+            {"role": "user", "content": prompt}],
+            
+            response_format={
+                "type": "json_schema",
+                "json_schema": json_schema
+            }
+        )
+        #st.write(f'{response}')
+        json_string = response.choices[0].message.content
+
+        #st.write(f'{json_string}')
+
+        # Parse the JSON string into a Python dictionary
+        parsed_json = json.loads(json_string)
+
+        #st.write(f'{parsed_json}')
+
+        # Extract the Python list
+        companies_list = parsed_json.get("companies", [])
+
+        #st.write(f'{companies_list}')
+        json_dict[schema_name] = companies_list
+
+        return json_dict
+
+
 def missing_warning(client, thread_id, prompt, assistant_identifier):
 
     question = """Given that, with the information in the files uploaded to the assistant, the model was not able to answer the following question:\n"""
@@ -296,8 +385,8 @@ def missing_warning(client, thread_id, prompt, assistant_identifier):
     """
 
     warning, x = separate_thread_answers(client, prompt, assistant_identifier)
-
-    warning += " Highlight!$%"
+    #warning = "Highlight!$% " + warning
+    #warning += " Highlight!$%"
 
     return warning
 
@@ -305,15 +394,19 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
 
     if "not_found" not in answer.lower():
 
-        return answer
+        highlight = False
+
+        return answer, highlight
     
     else:
 
         warning = missing_warning(client, thread_id, prompt, assistant_identifier)
-        #st.write(f'To the prompt: {prompt}')
-        #st.write(f'Gives waring: {warning}')
+        st.write(f'To the prompt: {prompt}')
+        st.write(f'Gives waring: {warning}')
 
-        return warning
+        highlight = True
+
+        return warning, highlight
 
 
 """
@@ -443,23 +536,103 @@ def remove_source_patterns(text):
     return cleaned_text
 
 
-def document_filler(doc_copy, prompt_name, assistant_response):
+def document_filler(doc_copy, prompt_name, assistant_response, last_p, 
+                    section_creator = False, highlighting=False):
     #First we loop through all the paragraphs.
-    for paragraph in doc_copy.paragraphs:
+    last_par_idx = last_p
+    if not section_creator:
+        for i, paragraph in enumerate(doc_copy.paragraphs):
 
-        #If the prompt_name correspond to the placeholder making up the paragraph
-        #we move to the filling part
-        if prompt_name in paragraph.text:
-            
-            #This is for formatting reasons to avoid alignment problems
-            paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            #If the prompt_name correspond to the placeholder making up the paragraph
+            #we move to the filling part
+            if prompt_name in paragraph.text:
+                
+                #This is for formatting reasons to avoid alignment problems
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
 
-            #Then, we move to the run objects inside the paragraph.
-            #The reason is that in this way, when we replace the placeholder 
-            #we will keep the placeholder's formatting
-            for run in paragraph.runs:
-                if prompt_name in run.text:
-                    run.text = run.text.replace(prompt_name, assistant_response)
+                #Then, we move to the run objects inside the paragraph.
+                #The reason is that in this way, when we replace the placeholder 
+                #we will keep the placeholder's formatting
+                for run in paragraph.runs:
+                    if prompt_name in run.text:
+                        run.text = run.text.replace(prompt_name, assistant_response)
+                        if highlighting:
+                            # Create a shading XML element to highlight the run
+                            shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
+                            run._r.get_or_add_rPr().append(shading_elm)
+
+                        last_par_idx = i
+
+    else: 
+        config = configparser.ConfigParser()
+    
+        # Read the .cfg file
+        config.read('assistant_config.cfg') 
+
+        font_size = config.get('document_format', 'font_size', fallback=None)
+        font_size = int(font_size)
+        font_type = config.get('document_format', 'font_type', fallback=None)
+
+        new_section_par = insert_paragraph_after(doc_copy.paragraphs[last_p],
+                                                 text= assistant_response,
+                                                 font_size= font_size, 
+                                                 font_type= font_type)
+        # After insertion, refresh the index by finding new_section_par in doc_copy.paragraphs
+        # The newly inserted paragraph will appear right after last_modified_idx.
+        # Since we inserted one after it, it should now be at last_modified_idx + 1.
+
+        if highlighting:
+            # Apply shading to the entire paragraph or each run if needed
+            for run in new_section_par.runs:
+                shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
+                run._r.get_or_add_rPr().append(shading_elm)
+        
+        # One approach is to directly compute the index:
+        new_section_idx = last_p + 1
+
+        # Update last_modified_idx to this new paragraph
+        last_par_idx = new_section_idx
+
+    return last_par_idx
+        
+
+def insert_paragraph_after(paragraph, text=None, style=None, section = False, 
+                           font_size = None, font_type = None, last_p = None, doc_copy = None):
+
+    if not section:
+        new_p = OxmlElement('w:p')
+        paragraph._p.addnext(new_p)
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        new_paragraph = paragraph._parent.add_paragraph()
+        new_paragraph._p = new_p
+        #new_paragraph.style = 'List Bullet'
+        if text:
+            run = new_paragraph.add_run(text)
+            # Set the font properties
+            run.font.size = Pt(font_size)
+            run.font.name = font_type
+
+        return new_paragraph
+
+    else:
+
+        last_paragraph = paragraph._parent.paragraphs[last_p]
+        new_p = OxmlElement('w:p')
+        last_paragraph._p.addnext(new_p)
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        new_paragraph = paragraph._parent.add_paragraph()
+        new_paragraph._p = new_p
+        #new_paragraph.style = 'List Bullet'
+        if text:
+            run = new_paragraph.add_run(text)
+            # Set the font properties
+            run.font.size = Pt(font_size)
+            run.font.name = font_type
+            run.bold = True
+        
+        last_p += 1
+        
+        return new_paragraph, last_p
 
 def adding_headers(document, title):
 
@@ -519,8 +692,49 @@ def highlight_paragraphs_with_keyword(doc, keyword, font_name, font_size):
             for run in paragraph.runs:
                 run.font.name = font_name  # Set the font name
                 run.font.size = Pt(font_size)  # Set the font size
+
+from docx import Document
+from docx.oxml.ns import nsdecls
+from docx.oxml import parse_xml
+from docx.shared import Pt    
+
+def highlight_sections(doc, keyword, font_name, font_size):
+    print(f'The font name is: {font_name}')
+    print(f'The font size is: {font_size}')
     
-        
+    highlighting = False  # Indicates if we are currently in a highlight section
+    for paragraph in doc.paragraphs:
+        text = paragraph.text
+
+        if keyword in text: 
+
+            paragraph.text = paragraph.text.replace(keyword, '')
+            highlighting = not highlighting
+
+        for run in paragraph.runs:
+            text = run.text
+            # Check if there's a highlight marker in this run
+            if keyword in text:
+                # Remove the keyword from the run text
+                run.text = run.text.replace(keyword, '')
+                # Toggle the highlighting state
+                highlighting = not highlighting
+                # After toggling, if highlighting is now on, highlight the run
+                # If highlighting just turned off, this run will end highlighting.
+            
+            # If currently highlighting, apply highlight and formatting
+            if highlighting:
+                # Add shading to this run
+                shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00"/>'.format(nsdecls('w')))
+                rPr = run._r.get_or_add_rPr()
+                rPr.append(shading_elm)
+
+                # Apply font and size
+                run.font.name = font_name
+                run.font.size = Pt(font_size)
+
+
+
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
