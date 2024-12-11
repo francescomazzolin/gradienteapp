@@ -662,10 +662,13 @@ If there is only one market, return a list with only one element""", markets,"ma
 
 # Main Function
 def main():
-    if option == 'Chatbot with PDFs':
-        chatbot_with_pdfs()
-    elif option == '2Pager Generator':
+    
+    if option == '2Pager Generator':
         document_generator()
+    
+    elif option == 'Chatbot with PDFs':
+        chatbot_with_pdfs()
+
     else:
         pass
 
