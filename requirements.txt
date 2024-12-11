@@ -11,3 +11,4 @@ openpyxl
 configparser
 tiktoken
 bs4
+markdownify 

@@ -92,7 +92,7 @@ st.markdown(
 
 option = st.selectbox(
     '',  # Leave label empty because it's already displayed above
-    ('Select an application', 'Chatbot with PDFs', '2Pager Generator')
+    ('Select an application', '2Pager Generator', 'Chatbot with PDFs')
 )
 
 
