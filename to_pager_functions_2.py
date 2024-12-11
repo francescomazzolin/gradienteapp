@@ -724,7 +724,6 @@ def document_filler_2(doc_copy, prompt_name, assistant_response, last_p,
         # Insert new paragraph after the last modified one
         new_section_par, last_par_idx = insert_paragraph_after(doc_copy.paragraphs[last_p],
                                                                text=assistant_response,
-                                                               section=True,
                                                                font_size=font_size,
                                                                font_type=font_type,
                                                                last_p=last_p,
