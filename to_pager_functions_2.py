@@ -112,11 +112,11 @@ def load_file_to_assistant(client, vector_storeid ,
         #st.write('\nUPLOADING THE DOCUMENTS\n')
         #st.write(file_batch.status)
         #st.write(file_batch.file_counts)
-        st.write('\n')
-        st.write(f'*'*20)
-        st.write(f'The file batches are:\n{file_batch}')
-        st.write(f'*'*20)
-        st.write('\n')
+        #st.write('\n')
+        #st.write(f'*'*20)
+        #st.write(f'The file batches are:\n{file_batch}')
+        #st.write(f'*'*20)
+        #st.write('\n')
     else:
 
         # Open each file in binary mode
@@ -128,9 +128,9 @@ def load_file_to_assistant(client, vector_storeid ,
                 vector_store_id= vector_storeid, files=file_streams
             )
 
-            st.write('\nUPLOADING THE DOCUMENTS\n')
-            st.write(file_batch.status)
-            st.write(file_batch.file_counts)
+            #st.write('\nUPLOADING THE DOCUMENTS\n')
+            #st.write(file_batch.status)
+            #st.write(file_batch.file_counts)
 
 
         finally:
@@ -408,9 +408,9 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
         warning = missing_warning(client, thread_id, prompt, assistant_identifier)
         highlight = True
 
-        st.write(f'To the prompt: {prompt}')
-        st.write(f'Gives waring: {warning}')
-        st.write(f'The highlight parameter is: {highlight}')
+        #st.write(f'To the prompt: {prompt}')
+        #st.write(f'Gives waring: {warning}')
+        #st.write(f'The highlight parameter is: {highlight}')
 
         
 
@@ -565,7 +565,7 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p,
                     if prompt_name in run.text:
                         run.text = run.text.replace(prompt_name, assistant_response)
                         if highlighting:
-                            st.write(f'CURRENTLY HIGHLIGHTING: {prompt_name}')
+                            #st.write(f'CURRENTLY HIGHLIGHTING: {prompt_name}')
                             # Create a shading XML element to highlight the run
                             shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
                             run._r.get_or_add_rPr().append(shading_elm)
@@ -591,7 +591,7 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p,
         # Since we inserted one after it, it should now be at last_modified_idx + 1.
 
         if highlighting:
-            st.write(f'The {prompt_name} is being highlighted')
+            #st.write(f'The {prompt_name} is being highlighted')
             # Apply shading to the entire paragraph or each run if needed
             for run in new_section_par.runs:
                 shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
