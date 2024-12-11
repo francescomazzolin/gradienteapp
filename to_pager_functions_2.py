@@ -386,10 +386,10 @@ def missing_warning(client, thread_id, prompt, assistant_identifier):
     Please write what will be a warning to the user that the model was not able to find the answer.
 
     It should follow: "The AI Assistant did not find/was not confident enough to write about: {the theme of the question}.
-    Please try to be extremely concise, as your answer is only meant to function as a warning to the user.
+    Please try to be concise, as your answer is only meant to function as a warning to the user.
     """
-
-    warning, x = separate_thread_answers(client, prompt, assistant_identifier)
+    #In place of question, there was prompt
+    warning, x = separate_thread_answers(client, question, assistant_identifier)
     #warning = "Highlight!$% " + warning
     #warning += " Highlight!$%"
 
@@ -647,9 +647,10 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
 
             run = new_paragraph.add_run(text.title())
             # Set the font properties
-            run.font.size = Pt(font_size)
+            run.font.size = Pt(font_size + 1)
             run.font.name = font_type
-            run.bold = True
+            run.italic = True
+            run.underline = True
         
         last_p += 1
         
