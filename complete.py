@@ -230,43 +230,50 @@ def document_generator():
     # Inputs or configurations for the document generator
     #st.markdown('Upload your files here:')
 
+    
+
     st.markdown(
     """
     <style>
-    div[data-testid="stFileUploader"] {
-        margin-top: -50px;
+    div[data-testid="stExpander"] details summary p{
+    font-size: 1.2rem;
+    color: #003866;
+    font-family: Arial, sans-serif;
     }
     </style>
     """,
     unsafe_allow_html=True
     )
-
-
-    # Template Path Input
-    pdf_docs = st.file_uploader('',accept_multiple_files=True)
-    #st.write(f'{type(pdf_docs)}')
-    st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+    with st.expander("Input Files"):
+        # Template Path Input
+        pdf_docs = st.file_uploader('',accept_multiple_files=True)
+        #st.write(f'{type(pdf_docs)}')
+        #st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
 
     st.subheader('Reference Market Files:')
-    additional_docs = st.file_uploader('', accept_multiple_files=True, key='additional_docs')
 
-    st.markdown('Key markets to analyze:')
+    with st.expander("Input Market files"):
+        additional_docs = st.file_uploader('', accept_multiple_files=True, key='additional_docs')
 
-    hide_enter_message = (
-    """
-    <style>
-    div[data-testid="stTextInput"] {
-        margin-top: -50px;
-    }
-    div[data-testid="InputInstructions"] > span:nth-child(1) {
-    visibility: hidden;
-    }
-    </style>
-    """   )
-    st.markdown(hide_enter_message, unsafe_allow_html=True)
+        st.markdown('Key markets to analyze:')
 
-    markets = st.text_input("", key="markets_input")
+        hide_enter_message = (
+        """
+        <style>
+        div[data-testid="stTextInput"] {
+            margin-top: -50px;
+        }
+        div[data-testid="InputInstructions"] > span:nth-child(1) {
+        visibility: hidden;
+        }
+        </style>
+        """   )
+        st.markdown(hide_enter_message, unsafe_allow_html=True)
 
+        markets = st.text_input("", key="markets_input")
+
+
+    
     st.markdown('Project title:')
 
     hide_enter_message = (
@@ -281,6 +288,7 @@ def document_generator():
     </style>
     """   )
     st.markdown(hide_enter_message, unsafe_allow_html=True)
+    
     project_title = st.text_input("")
     
     gen_button = st.button('Generate Document', key = 'red')
