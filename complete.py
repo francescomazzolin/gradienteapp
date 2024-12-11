@@ -101,6 +101,7 @@ option = st.selectbox(
 def chatbot_with_pdfs(default=True, pdf_docs=None):
 
     if default:
+        st.markdown("<h1 style='color:#003866;'>Chat with multiple PDFs :books:</h1>", unsafe_allow_html=True)
         st.header('Chat with multiple PDFs :books:')
 
     # Initialize Session State
