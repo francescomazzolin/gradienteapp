@@ -49,7 +49,7 @@ st.markdown("""
     }   
     
     /* Optional: Customize specific elements */
-    h1, h2, h3, h4, h5, h6 {
+    h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
         font-weight: 500;
         color: #003866;  /* Adjust header color if needed */
     }
@@ -224,8 +224,9 @@ def document_generator():
     font_type = config.get('document_format', 'font_type', fallback=None)
 
 
-    st.header('2Pager Generator :page_facing_up:')
-    
+    #st.header('2Pager Generator :page_facing_up:')
+    st.markdown("<h1 style='color:#003866;'>2Pager Generator</h1>", unsafe_allow_html=True)
+
 
     #st.subheader('Company-specific files:')    
     #st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
