@@ -382,19 +382,17 @@ def missing_warning(client, thread_id, prompt, assistant_identifier, answer):
     question = """Given that, with the information in the files uploaded to the assistant, the model was not able to answer the following prompt:\n"""
     question = question + prompt
 
-    question = f"""
+    question = """
     \nPlease write what will be a warning to the user that the model was not able to find the answer to the prompt.
 
     It should follow: "The AI Assistant did not find/was not confident enough to write about: [the theme of the prompt]".
     Please try to be concise, as your answer is only meant to function as a warning to the user.
-
-    Then add the original answer: {answer}
     """
+    prompt += '\nPlease try to be as concise as possible'
     #In place of question, there was prompt
-    warning, x = separate_thread_answers(client, question, assistant_identifier)
-    #warning = "Highlight!$% " + warning
-    #warning += " Highlight!$%"
-
+    warning, x = separate_thread_answers(client, prompt, assistant_identifier)
+    
+    #warning += f"\n The original answer was:\n {answer}"
     return warning
 
 def warning_check(answer, client, thread_id, prompt, assistant_identifier):
@@ -636,6 +634,8 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
     else:
 
         last_paragraph = paragraph._parent.paragraphs[last_p]
+        #empty_p = paragraph._parent.add_paragraph()
+
         new_p = OxmlElement('w:p')
         last_paragraph._p.addnext(new_p)
         paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -649,9 +649,9 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
 
             run = new_paragraph.add_run(text.title())
             # Set the font properties
-            run.font.size = Pt(font_size + 1)
+            run.font.size = Pt(font_size + 2)
             run.font.name = font_type
-            run.italic = True
+            run.bold = True
             run.underline = True
         
         last_p += 1
