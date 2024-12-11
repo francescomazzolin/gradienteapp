@@ -408,8 +408,8 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
         warning = missing_warning(client, thread_id, prompt, assistant_identifier)
         highlight = True
 
-        #st.write(f'To the prompt: {prompt}')
-        #st.write(f'Gives waring: {warning}')
+        st.write(f'To the prompt: {prompt}')
+        st.write(f'Gives waring: {warning}')
         #st.write(f'The highlight parameter is: {highlight}')
 
         
