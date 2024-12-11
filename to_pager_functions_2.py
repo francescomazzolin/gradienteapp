@@ -869,13 +869,13 @@ def boldify_text_between_asterisks(doc_path):
                         # Copy formatting from the current run
                         bold_run.font.size = run.font.size
                         bold_run.font.name = run.font.name
-                        bold_run._element.rPr.rFonts.set(qn('w:eastAsia'), run.font.name)
+                        #bold_run._element.rPr.rFonts.set(qn('w:eastAsia'), run.font.name)
                     else:  # Regular text
                         normal_run = paragraph.add_run(part)
                         # Copy formatting from the current run
                         normal_run.font.size = run.font.size
                         normal_run.font.name = run.font.name
-                        normal_run._element.rPr.rFonts.set(qn('w:eastAsia'), run.font.name)
+                        #normal_run._element.rPr.rFonts.set(qn('w:eastAsia'), run.font.name)
                 
                 # Clear the original run text
                 run.clear()
