@@ -67,6 +67,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 css_path = pathlib.Path("style.css")
 
 tp.load_css(css_path)

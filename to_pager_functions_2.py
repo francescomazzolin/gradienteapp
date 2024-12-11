@@ -628,8 +628,8 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
             run.font.italic = False
             run.underline = None
             run.font.underline = False
-
-        return new_paragraph
+        last_p += 1
+        return new_paragraph, last_p
 
     else:
 
