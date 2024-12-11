@@ -28,6 +28,7 @@ importlib.reload(pc)
 # Load environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY") or st.secrets.get("OpenAI_key")
+#openai.api_key = st.secrets.get("OpenAI_key")
 
 # Check API key
 if openai.api_key is None:
@@ -225,48 +226,57 @@ def document_generator():
     st.header('2Pager Generator :page_facing_up:')
     
 
-    st.subheader('Company-specific files:')    
+    #st.subheader('Company-specific files:')    
     #st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
     # Inputs or configurations for the document generator
     #st.markdown('Upload your files here:')
 
+    
+
     st.markdown(
     """
     <style>
-    div[data-testid="stFileUploader"] {
-        margin-top: -50px;
+    div[data-testid="stExpander"] details summary p{
+    font-size: 1.3rem;
+    color: #003866;
+    font-family: Arial, sans-serif;
+    font-weight: 500;
     }
     </style>
     """,
     unsafe_allow_html=True
     )
+    with st.expander("Company-specific files:"):
+        # Template Path Input
+        pdf_docs = st.file_uploader('',accept_multiple_files=True)
+        #st.write(f'{type(pdf_docs)}')
+        #st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
+
+    #st.subheader('Reference Market Files:')
+    st.write("")
+
+    with st.expander("Reference Market files"):
+        additional_docs = st.file_uploader('', accept_multiple_files=True, key='additional_docs')
+
+        st.markdown('Key markets to analyze:')
+
+        hide_enter_message = (
+        """
+        <style>
+        div[data-testid="stTextInput"] {
+            margin-top: -50px;
+        }
+        div[data-testid="InputInstructions"] > span:nth-child(1) {
+        visibility: hidden;
+        }
+        </style>
+        """   )
+        st.markdown(hide_enter_message, unsafe_allow_html=True)
+
+        markets = st.text_input("", key="markets_input")
 
 
-    # Template Path Input
-    pdf_docs = st.file_uploader('',accept_multiple_files=True)
-    #st.write(f'{type(pdf_docs)}')
-    st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
-
-    st.subheader('Reference Market Files:')
-    additional_docs = st.file_uploader('', accept_multiple_files=True, key='additional_docs')
-
-    st.markdown('Key markets to analyze:')
-
-    hide_enter_message = (
-    """
-    <style>
-    div[data-testid="stTextInput"] {
-        margin-top: -50px;
-    }
-    div[data-testid="InputInstructions"] > span:nth-child(1) {
-    visibility: hidden;
-    }
-    </style>
-    """   )
-    st.markdown(hide_enter_message, unsafe_allow_html=True)
-
-    markets = st.text_input("", key="markets_input")
-
+    
     st.markdown('Project title:')
 
     hide_enter_message = (
@@ -281,18 +291,19 @@ def document_generator():
     </style>
     """   )
     st.markdown(hide_enter_message, unsafe_allow_html=True)
+    
     project_title = st.text_input("")
     
     gen_button = st.button('Generate Document', key = 'red')
-
     for_dict = {0: [None] ,
-                1: [f"""given the followin textual description of the markets the analyst wants to be analyzed:
+                1: [f"""given the following textual description of the markets the analyst wants to be analyzed:
 
 {markets}
 
 please give me the list of markets the analyst wants to be analyzed.
 
-please do not include the word "market" in the description unless strictly necessary.""", markets,"market_analysis_request"]}
+please do not include the word "market" in the description unless strictly necessary.
+If there is only one market, return a list with only one element""", markets,"market_analysis_request"]}
 
     # Start the generation process
     if gen_button:
@@ -382,7 +393,7 @@ please do not include the word "market" in the description unless strictly neces
                 temp_responses.append(assistant_response)
                 assistant_response = tp.remove_source_patterns(assistant_response)
                 answers_dict[prompt_name] = assistant_response
-                last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p,
+                last_p = tp.document_filler_2(doc_copy, prompt_name, assistant_response, last_p = last_p,
                                             highlighting = highlight)
             else:
                 st.warning(f"No response for prompt '{prompt_name}'.")
@@ -428,7 +439,25 @@ please do not include the word "market" in the description unless strictly neces
                                                                                         ['RM_Prompts', 'RM_Format_add'])
         
         #st.write(f'Reference market: {prompt_list}')
+
+        ####################################################################################################################
+        #GIVING THE DOCUMENT DONE SO FAR
+        ####################################################################################################################
         
+        generated_document = "\n".join(answers_dict.values())
+        
+        #Creating the thread
+
+        thread = client.beta.threads.create()
+        thread_identifier = thread.id
+
+        gen_doc_prompt = f"""Thus far, the document generated is: {generated_document}.
+        Therfore, try to avoid repetition of already stated information unless strictly necessary.
+        
+
+                            """
+
+
         loop_length = len(prompt_list)
         counter = 0
         while counter < loop_length:
@@ -441,31 +470,33 @@ please do not include the word "market" in the description unless strictly neces
             print(row)
 
             if pd.notna(row['For_loop'].iloc[0]):
-
+                #As there could be more than one loop, we get its identifier
                 loop_number = row['For_loop'].iloc[0]
                 
                 print(f'The loop_number is: {loop_number}')
-
+                #We obtain the prompts that are part of this loop
                 temp = prompt_df[prompt_df['For_loop'] == loop_number]
 
+                #We obtain the placeholders and prompt text that belong to the loop
                 for_list = list(zip(temp['Placeholder'], temp['Prompt']))
                 print(f'The for prompt list is: {for_list}')
+
+                #A loop may require the need to obtain a iterable object from the documents.
+                #The required information is in a list stored in a dictionary, in which the 
+                #keys are the loop_id number
                 start_json = for_dict[loop_number]
                 print(f'The list of the dictionary is: {start_json}')
-            
+
+                #We obtain the schema name that identifies a JSON schema in the schema file.
                 schema_name = start_json[2]
                 print(f'The schema name is: {schema_name}')
-
+                #We retrieve the JSON schema from the registry
                 json_schema = SCHEMA_REGISTRY[schema_name]
 
-                #print(f'The json_schema is: {json_schema}')
-                
-
+                #We obtain the prompt to obtain the iterable object
                 prompt = start_json[0].format(markets = start_json[1])
-                #question = row['JSON_question'].iloc[0]
-
-                #prompt += question
-
+                
+                #We obtain the iterable by using OpenAI chat completion service.
                 response = client.chat.completions.create(
                     model="gpt-4o",
                     messages=[{"role": "system", "content": "You are a Private Equity Analyst assistant"},
@@ -476,22 +507,23 @@ please do not include the word "market" in the description unless strictly neces
                         "json_schema": json_schema
                     }
                 )
-                #st.write(f'{response}')
+                
+                #This is the JSON output of the chat
                 json_string = response.choices[0].message.content
 
                 #st.write(f'{json_string}')
 
-                # Parse the JSON string into a Python dictionary
+                #Parse the JSON string into a Python dictionary
                 parsed_json = json.loads(json_string)
 
-                #st.write(f'{parsed_json}')
-
-                # Extract the Python list
+                #Extract the Python list that will be
                 check_list = parsed_json.get("market_sectors", [])
                 print(f'The check list is: {check_list}')
 
             else:
-
+                #If the current prompt is not the start of a for loop, then the for_list 
+                #through which we iterate will be simply a single tuple with the placeholder
+                #and the prompt text
                 for_list = [(prompt_name, prompt_message)]
                 check_list = for_dict[0]
         #for prompt_name, prompt_message in prompt_list:
@@ -529,7 +561,9 @@ please do not include the word "market" in the description unless strictly neces
                     #st.write(f'{prompt_message_f}')
 
                     assistant_response, thread_id = tp.separate_thread_answers(openai, prompt_message_f, 
-                                                                    assistant_identifier)
+                                                                    assistant_identifier)#,
+                                                                    #same_chat = True,
+                                                                    #thread_id=thread_identifier)
                     
                     json_dict = tp.json_schema_answer(client, prompt_df, prompt_name,
                                                     json_dict, assistant_response)
@@ -550,13 +584,13 @@ please do not include the word "market" in the description unless strictly neces
 
                     if item is None:
 
-                        last_p = tp.document_filler(doc_copy, prompt_name, assistant_response, last_p = last_p,
+                        last_p = tp.document_filler_2(doc_copy, prompt_name, assistant_response, last_p = last_p,
                                                     highlighting = highlight)
                         print(f'The last paragraph-position is: {last_p}')
 
                     else: 
                         
-                        last_p = tp.document_filler(doc_copy, prompt_name, assistant_response,
+                        last_p = tp.document_filler_2(doc_copy, prompt_name, assistant_response,
                                                     section_creator = True, last_p = last_p,
                                                     highlighting = highlight)
                         print(f'The last paragraph-position is: {last_p}')
@@ -592,10 +626,10 @@ please do not include the word "market" in the description unless strictly neces
         # Create buttons inside the container
         col1, spacer, col2 = st.columns([2, 4.5, 1.3])
         
-        #answers_dict = st.session_state.get('ans_dic')
-        #pickle_path= f"{project_title}_answers_dict.pkl"
-        #with open(pickle_path, "wb") as pickle_file:
-         #       pickle.dump(answers_dict, pickle_file)
+        answers_dict = st.session_state.get('ans_dic')
+        pickle_path= f"{project_title}_answers_dict.pkl"
+        with open(pickle_path, "wb") as pickle_file:
+                pickle.dump(answers_dict, pickle_file)
         
         with col1:
             with open(output_path, "rb") as doc_file:
@@ -608,14 +642,14 @@ please do not include the word "market" in the description unless strictly neces
                 )
             pickle_path = f"{project_title}_answers_dict.pkl"
             
-            #with open(pickle_path, "rb") as pkl_file:
-                #st.download_button(
-                    #label="Download Answers Dictionary (Pickle)",
-                    #data=pkl_file,
-                    #file_name=pickle_path,
-                    #mime="application/octet-stream",
-                    #key='pickle_download'
-                #)
+            with open(pickle_path, "rb") as pkl_file:
+                st.download_button(
+                    label="Download Answers Dictionary (Pickle)",
+                    data=pkl_file,
+                    file_name=pickle_path,
+                    mime="application/octet-stream",
+                    key='pickle_download'
+                )
             #fact_check_button = st.button('Fact Check', key = 'blue')
             st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             with col2:
@@ -638,3 +672,5 @@ def main():
 if __name__ == '__main__':
     main()
 
+
+# %%

@@ -112,7 +112,11 @@ def load_file_to_assistant(client, vector_storeid ,
         #st.write('\nUPLOADING THE DOCUMENTS\n')
         #st.write(file_batch.status)
         #st.write(file_batch.file_counts)
-
+        st.write('\n')
+        st.write(f'*'*20)
+        st.write(f'The file batches are:\n{file_batch}')
+        st.write(f'*'*20)
+        st.write('\n')
     else:
 
         # Open each file in binary mode
@@ -381,7 +385,8 @@ def missing_warning(client, thread_id, prompt, assistant_identifier):
     question = """
     Please write what will be a warning to the user that the model was not able to find the answer.
 
-    It should follow: "The AI Assistant did not find/was not confident enough to write about: {the theme of the question}
+    It should follow: "The AI Assistant did not find/was not confident enough to write about: {the theme of the question}.
+    Please try to be concise, as this is meant to function as a warning to the user, not as a full-fledged answer to a prompt please.
     """
 
     warning, x = separate_thread_answers(client, prompt, assistant_identifier)
@@ -401,10 +406,13 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
     else:
 
         warning = missing_warning(client, thread_id, prompt, assistant_identifier)
+        highlight = True
+
         st.write(f'To the prompt: {prompt}')
         st.write(f'Gives waring: {warning}')
+        st.write(f'The highlight parameter is: {highlight}')
 
-        highlight = True
+        
 
         return warning, highlight
 
@@ -557,6 +565,7 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p,
                     if prompt_name in run.text:
                         run.text = run.text.replace(prompt_name, assistant_response)
                         if highlighting:
+                            st.write(f'CURRENTLY HIGHLIGHTING: {prompt_name}')
                             # Create a shading XML element to highlight the run
                             shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
                             run._r.get_or_add_rPr().append(shading_elm)
@@ -582,6 +591,7 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p,
         # Since we inserted one after it, it should now be at last_modified_idx + 1.
 
         if highlighting:
+            st.write(f'The {prompt_name} is being highlighted')
             # Apply shading to the entire paragraph or each run if needed
             for run in new_section_par.runs:
                 shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
@@ -596,6 +606,8 @@ def document_filler(doc_copy, prompt_name, assistant_response, last_p,
     return last_par_idx
         
 
+
+
 def insert_paragraph_after(paragraph, text=None, style=None, section = False, 
                            font_size = None, font_type = None, last_p = None, doc_copy = None):
 
@@ -608,9 +620,14 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
         #new_paragraph.style = 'List Bullet'
         if text:
             run = new_paragraph.add_run(text)
-            # Set the font properties
-            run.font.size = Pt(font_size)
-            run.font.name = font_type
+            run.bold = False
+            run.font.bold = False
+        
+        # Explicitly reset italic and underline
+            run.italic = False
+            run.font.italic = False
+            run.underline = None
+            run.font.underline = False
 
         return new_paragraph
 
@@ -633,6 +650,94 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
         last_p += 1
         
         return new_paragraph, last_p
+    
+
+from markdownify import markdownify as md
+
+def document_filler_2(doc_copy, prompt_name, assistant_response, last_p, 
+                    section_creator=False, highlighting=False):
+    """
+    Function to replace placeholders in a .docx document with responses.
+    Includes support for Markdown formatting and highlighting.
+    
+    Parameters:
+        doc_copy (Document): A `python-docx` Document object.
+        prompt_name (str): Placeholder name to replace in the document.
+        assistant_response (str): Text to insert in place of the placeholder.
+        last_p (int): Index of the last modified paragraph.
+        section_creator (bool): Whether to create a new section for the response.
+        highlighting (bool): Whether to apply highlighting to the inserted text.
+    Returns:
+        int: Index of the last modified paragraph.
+    """
+    # Normalize assistant_response by converting Markdown to plain text or styled content
+
+    markdown_chars = [
+    '**','#', '##', '###', '####', '#####', '######'   # Section symbols
+    ]
+    if any(char in assistant_response for char in markdown_chars):
+
+        assistant_response = md(assistant_response)
+
+    # Last modified paragraph index
+    last_par_idx = last_p
+
+    if not section_creator:
+        for i, paragraph in enumerate(doc_copy.paragraphs):
+
+            # Check if the placeholder is in the paragraph text
+            if prompt_name in paragraph.text:
+
+                # Align paragraph to the left
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+                # Replace placeholder text
+                full_text = paragraph.text.replace(prompt_name, assistant_response)
+
+                # Clear existing runs
+                for run in paragraph.runs:
+                    run.clear()
+                
+                # Create a new run with the updated text
+                new_run = paragraph.add_run(full_text)
+
+                new_run.bold = False
+                new_run.italic = False
+                new_run.underline = None
+                # Apply highlighting if required
+                if highlighting:
+                    shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
+                    new_run._r.get_or_add_rPr().append(shading_elm)
+
+                last_par_idx = i
+                break  # Stop after replacing the first instance of the placeholder
+
+    else:
+        # Handle section creation logic
+        config = configparser.ConfigParser()
+        config.read('assistant_config.cfg')
+
+        # Get font size and type from config
+        font_size = int(config.get('document_format', 'font_size', fallback=12))
+        font_type = config.get('document_format', 'font_type', fallback='Times New Roman')
+
+        # Insert new paragraph after the last modified one
+        new_section_par, last_par_idx = insert_paragraph_after(doc_copy.paragraphs[last_p],
+                                                               text=assistant_response,
+                                                               #section=True,
+                                                               font_size=font_size,
+                                                               font_type=font_type,
+                                                               last_p=last_p,
+                                                               doc_copy=doc_copy)
+
+        # Highlight new paragraph if needed
+        if highlighting:
+            for run in new_section_par.runs:
+                shading_elm = parse_xml(r'<w:shd {} w:fill="FFFF00" w:val="clear"/>'.format(nsdecls('w')))
+                run._r.get_or_add_rPr().append(shading_elm)
+
+    return last_par_idx
+
 
 def adding_headers(document, title):
 

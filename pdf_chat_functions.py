@@ -66,6 +66,10 @@ def get_text_from_files(files):
                 html_files.append(file)
                 #st.write(f'Found file {file} is .html')
 
+            else:
+
+                pass
+
     #pdf_files = [file for file in files if file.endswith('.pdf')]
     #html_files = [file for file in files if file.endswith('.html')]
 
