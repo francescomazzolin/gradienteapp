@@ -641,7 +641,11 @@ def insert_paragraph_after(paragraph, text=None, style=None, section = False,
         new_paragraph._p = new_p
         #new_paragraph.style = 'List Bullet'
         if text:
-            run = new_paragraph.add_run(text)
+
+            if 'market' not in text.lower():
+                text += ' Market'
+
+            run = new_paragraph.add_run(text.title())
             # Set the font properties
             run.font.size = Pt(font_size)
             run.font.name = font_type
