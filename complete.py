@@ -239,6 +239,7 @@ def document_generator():
     font-size: 1.2rem;
     color: #003866;
     font-family: Arial, sans-serif;
+    font-weight: 500;
     }
     </style>
     """,
@@ -251,6 +252,7 @@ def document_generator():
         #st.markdown("<hr style='border:1px solid #ccc; margin:20px 0;'>", unsafe_allow_html=True)
 
     st.subheader('Reference Market Files:')
+    st.write("")
 
     with st.expander("Input Market files"):
         additional_docs = st.file_uploader('', accept_multiple_files=True, key='additional_docs')
