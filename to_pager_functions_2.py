@@ -386,7 +386,7 @@ def missing_warning(client, thread_id, prompt, assistant_identifier):
     Please write what will be a warning to the user that the model was not able to find the answer.
 
     It should follow: "The AI Assistant did not find/was not confident enough to write about: {the theme of the question}.
-    Please try to be concise, as this is meant to function as a warning to the user, not as a full-fledged answer to a prompt please.
+    Please try to be extremely concise, as your answer is only meant to function as a warning to the user.
     """
 
     warning, x = separate_thread_answers(client, prompt, assistant_identifier)
