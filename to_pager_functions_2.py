@@ -377,16 +377,18 @@ def json_schema_answer(client, prompt_df, prompt_name, json_dict,
         return json_dict
 
 
-def missing_warning(client, thread_id, prompt, assistant_identifier):
+def missing_warning(client, thread_id, prompt, assistant_identifier, answer):
 
-    question = """Given that, with the information in the files uploaded to the assistant, the model was not able to answer the following question:\n"""
+    question = """Given that, with the information in the files uploaded to the assistant, the model was not able to answer the following prompt:\n"""
     question = question + prompt
 
-    question = """
-    Please write what will be a warning to the user that the model was not able to find the answer.
+    question = f"""
+    \nPlease write what will be a warning to the user that the model was not able to find the answer to the prompt.
 
-    It should follow: "The AI Assistant did not find/was not confident enough to write about: {the theme of the question}.
+    It should follow: "The AI Assistant did not find/was not confident enough to write about: [the theme of the prompt]".
     Please try to be concise, as your answer is only meant to function as a warning to the user.
+
+    Then add the original answer: {answer}
     """
     #In place of question, there was prompt
     warning, x = separate_thread_answers(client, question, assistant_identifier)
@@ -405,7 +407,7 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
     
     else:
 
-        warning = missing_warning(client, thread_id, prompt, assistant_identifier)
+        warning = missing_warning(client, thread_id, prompt, assistant_identifier, answer)
         highlight = True
 
         st.write(f'To the prompt: {prompt}')
