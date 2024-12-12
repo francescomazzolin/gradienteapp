@@ -643,18 +643,18 @@ If there is only one market, return a list with only one element""", markets,"ma
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     key = 'reddown'
                 )
-            pickle_path = f"{project_title}_answers_dict.pkl"
+            #pickle_path = f"{project_title}_answers_dict.pkl"
             
-            with open(pickle_path, "rb") as pkl_file:
-                st.download_button(
-                    label="Download Answers Dictionary (Pickle)",
-                    data=pkl_file,
-                    file_name=pickle_path,
-                    mime="application/octet-stream",
-                    key='pickle_download'
-                )
+            #with open(pickle_path, "rb") as pkl_file:
+                #st.download_button(
+                    #label="Download Answers Dictionary (Pickle)",
+                    #data=pkl_file,
+                    #file_name=pickle_path,
+                    #mime="application/octet-stream",
+                    #key='pickle_download'
+                #)
             #fact_check_button = st.button('Fact Check', key = 'blue')
-            st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+            #st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
             with col2:
                 if st.button('Fact Check', key ='blue'):
                     st.session_state.fact_check = True
