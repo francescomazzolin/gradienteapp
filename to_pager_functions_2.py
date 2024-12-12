@@ -408,8 +408,8 @@ def warning_check(answer, client, thread_id, prompt, assistant_identifier):
         warning = missing_warning(client, thread_id, prompt, assistant_identifier, answer)
         highlight = True
 
-        st.write(f'To the prompt: {prompt}')
-        st.write(f'Gives waring: {warning}')
+        #st.write(f'To the prompt: {prompt}')
+        #st.write(f'Gives waring: {warning}')
         #st.write(f'The highlight parameter is: {highlight}')
 
         
@@ -727,7 +727,7 @@ def document_filler_2(doc_copy, prompt_name, assistant_response, last_p,
         # Get font size and type from config
         font_size = int(config.get('document_format', 'font_size', fallback=12))
         font_type = config.get('document_format', 'font_type', fallback='Times New Roman')
-        st.write(f'The prompt is: {prompt_name} and pargraph: {last_p}')
+        #st.write(f'The prompt is: {prompt_name} and pargraph: {last_p}')
         # Insert new paragraph after the last modified one
         new_section_par, last_par_idx = insert_paragraph_after(doc_copy.paragraphs[last_p],
                                                                text=assistant_response,
